@@ -8,6 +8,7 @@ import { JobsController } from './jobs.controller';
 
 import { JobsService } from './jobs.service';
 import { Company } from '../companies/entities/company.entity';
+import { Category } from '../categories/entities/category.entity';
 
 
 @Module({
@@ -15,7 +16,8 @@ import { Company } from '../companies/entities/company.entity';
 imports:[
  TypeOrmModule.forFeature([
   Job,
-  Company
+  Company,
+  Category
  ])
 ],
 

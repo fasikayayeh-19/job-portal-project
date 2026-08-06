@@ -2,11 +2,14 @@ import {
   IsString,
   IsOptional,
   IsArray,
+  IsUUID,
 } from 'class-validator';
 
 
 export class CreateJobDto {
 
+  @IsUUID()
+categoryId!: string;
 
   @IsString()
   title!:string;

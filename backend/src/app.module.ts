@@ -11,6 +11,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 // import { RolesGuard } from './common/guards/roles.guard';
 import { AdminModule } from './admin/admin.module';
 import { JobsModule } from './jobs/jobs.module';
+import { CategoriesModule } from './categories/categories.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -51,6 +52,8 @@ import { JobsModule } from './jobs/jobs.module';
     AdminModule,
 
     JobsModule,
+
+    CategoriesModule,
   ],
   providers:[
 

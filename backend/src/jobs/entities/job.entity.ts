@@ -10,6 +10,7 @@ import {
 
 
 import { Company } from '../../companies/entities/company.entity';
+import { Category } from '../../categories/entities/category.entity';
 
 
 
@@ -17,12 +18,13 @@ export enum JobStatus {
 
   PENDING = 'PENDING',
 
+  APPROVED = 'APPROVED',
+
   PUBLISHED = 'PUBLISHED',
 
   CLOSED = 'CLOSED',
 
 }
-
 
 
 @Entity()
@@ -72,7 +74,7 @@ export class Job {
   @Column({
     nullable:true
   })
-  salary!   :string;
+  salary!:string;
 
 
 
@@ -103,6 +105,13 @@ export class Job {
   @JoinColumn()
   company!:Company;
 
+
+  @ManyToOne(
+  () => Category,
+  category => category.jobs,
+)
+@JoinColumn()
+category!: Category;
 
 
   @CreateDateColumn()
