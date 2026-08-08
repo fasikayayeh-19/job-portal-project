@@ -14,6 +14,7 @@ import { Job } from '../jobs/entities/job.entity';
 
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MailService } from '../mail/mail.service';
 
 
 
@@ -29,7 +30,11 @@ export class ApplicationsService {
 
     @InjectRepository(Job)
     private jobRepository: Repository<Job>,
+   
+
     private notificationsService: NotificationsService,
+
+  private mailService: MailService,
 
   ) {}
 
@@ -199,15 +204,19 @@ if(application.job.company.user.id !== user.id){
 
 
 application.status = dto.status;
+
 await this.notificationsService.create(
   application.seeker.id,
   'Application Update',
   `Your application status changed to ${dto.status}`,
 );
 
+await this.mailService.sendApplicationStatusEmail(
+  application.seeker.email,
+  dto.status,
+);
 
 return this.applicationRepository.save(application);
-
 }
 
 }
