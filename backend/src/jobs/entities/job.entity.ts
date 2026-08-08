@@ -6,11 +6,13 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 
 
 import { Company } from '../../companies/entities/company.entity';
 import { Category } from '../../categories/entities/category.entity';
+import { Application } from '../../applications/entities/application.entity';
 
 
 
@@ -112,7 +114,11 @@ export class Job {
 )
 @JoinColumn()
 category!: Category;
-
+  @OneToMany(
+  ()=>Application,
+  application=>application.job
+)
+applications!: Application[];
 
   @CreateDateColumn()
   createdAt!:Date;

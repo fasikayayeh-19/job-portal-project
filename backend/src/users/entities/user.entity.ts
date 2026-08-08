@@ -5,9 +5,11 @@ import {
     OneToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { Notification } from '../../notifications/entities/notification.entity';
 import { Company } from '../../companies/entities/company.entity';
-
+import { Application } from '../../applications/entities/application.entity';
 @Entity('users')
 export class User {
 
@@ -66,6 +68,17 @@ company!:Company;
   @UpdateDateColumn()
   updatedAt!:Date;
 
+  
+@OneToMany(
+  ()=>Application,
+  application=>application.seeker
+)
+applications!: Application[];
 
+@OneToMany(
+  () => Notification,
+  notification => notification.user,
+)
+notifications!: Notification[];
  
 }

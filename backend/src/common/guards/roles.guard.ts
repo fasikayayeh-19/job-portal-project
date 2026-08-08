@@ -7,73 +7,43 @@ import {
 
 import { Reflector } from '@nestjs/core';
 
-
 @Injectable()
 export class RolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
 
-constructor(
- private reflector: Reflector,
-){}
+  canActivate(context: ExecutionContext) {
+    const requiredRoles = this.reflector.get<string[]>(
+      'roles',
+      context.getHandler(),
+    );
 
+    console.log('Required Roles:', requiredRoles);
 
-canActivate(
- context:ExecutionContext
-){
+    if (!requiredRoles) {
+      return true;
+    }
 
-const requiredRoles =
-this.reflector.get<string[]>(
- 'roles',
- context.getHandler(),
-);
+    const request = context.switchToHttp().getRequest();
 
+    console.log('Request User:', request.user);
 
-console.log(
-"Required Roles:",
-requiredRoles
-);
+    const user = request.user;
 
+    if (!user) {
+      throw new ForbiddenException('User not found');
+    }
 
-if(!requiredRoles){
- return true;
+    const hasRole = requiredRoles.includes(user.role);
+
+console.log('Required Roles:', requiredRoles);
+console.log('User Role:', user.role);
+console.log('Has Role:', hasRole);
+
+if (!hasRole) {
+  throw new ForbiddenException('You do not have permission');
 }
 
-
-const request =
-context.switchToHttp().getRequest();
-
-
-console.log(
-"Request User:",
-request.user
-);
-
-
-const user = request.user;
-
-
-if(!user){
- throw new ForbiddenException(
-  'User not found'
- );
-}
-
-
-if(!requiredRoles.includes(user.role)){
-
-console.log(
-"User Role:",
-user.role
-);
-
-throw new ForbiddenException(
-'You do not have permission'
-);
-
-}
-
-
-return true;
-
-}
-
+    return true;
+  }
+  
 }

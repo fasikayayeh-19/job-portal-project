@@ -54,6 +54,7 @@ import { CategoriesModule } from './categories/categories.module';
     JobsModule,
 
     CategoriesModule,
+  
   ],
   providers:[
 
