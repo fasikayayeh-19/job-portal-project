@@ -31,7 +31,12 @@ constructor(
  private adminService:AdminService
 ){}
 
-
+@Get('companies')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
+getCompanies() {
+  return this.adminService.getCompanies();
+}
 
 @Get('companies/pending')
 @UseGuards(
@@ -46,7 +51,12 @@ return this.adminService.getPendingCompanies();
 }
 
 
-
+@Get('jobs')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
+getJobs() {
+  return this.adminService.getJobs();
+}
 
 @Patch('companies/:id/approve')
 @UseGuards(
@@ -78,6 +88,13 @@ rejectCompany(
 return this.adminService.rejectCompany(id);
 
 }
+ 
 
+@Get('users')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
+getUsers() {
+  return this.adminService.getUsers();
+}
 
 }

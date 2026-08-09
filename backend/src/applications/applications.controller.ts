@@ -2,7 +2,8 @@ import {
  Controller,
  Post,
  Body,
- UseGuards
+ UseGuards,
+ Req
 } from '@nestjs/common';
 
 
@@ -50,15 +51,13 @@ create(
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('COMPANY')
 getJobApplicants(
-  @Param('jobId') jobId:string,
-  @CurrentUser() user:any,
-){
-
+  @Param('jobId') jobId: string,
+  @Req() req: any,
+) {
   return this.applicationsService.getJobApplicants(
     jobId,
-    user
+    req.user,
   );
-
 }
 @Patch(':id/status')
 @UseGuards(JwtAuthGuard, RolesGuard)

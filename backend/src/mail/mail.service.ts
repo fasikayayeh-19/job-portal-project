@@ -14,7 +14,7 @@ export class MailService {
     jobTitle?: string,
     companyName?: string,
   ) {
-    const appBaseUrl = process.env.APP_BASE_URL || 'https://your-job-portal.com';
+   const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
     const loginLink = `${appBaseUrl}/login`;
     const helpCenterLink = `${appBaseUrl}/help`;
     const unsubscribeLink = `${appBaseUrl}/unsubscribe?email=${encodeURIComponent(email)}`;
@@ -133,7 +133,7 @@ export class MailService {
   }
 
   private getStatusColor(status: string): string {
-    const statusMap = {
+    const statusMap: Record<string, string> = {
       'Applied': '#2a7de1',
       'Under Review': '#f59e0b',
       'Interview Scheduled': '#8b5cf6',
@@ -148,7 +148,7 @@ export class MailService {
   }
 
   private getStatusEmoji(status: string): string {
-    const emojiMap = {
+   const emojiMap: Record<string, string> = {
       'Applied': '📄',
       'Under Review': '🔍',
       'Interview Scheduled': '📅',
@@ -163,7 +163,7 @@ export class MailService {
   }
 
   private getStatusMessage(status: string): string {
-    const messageMap = {
+   const messageMap: Record<string, string> = {
       'Applied': 'Your application has been received and is being processed.',
       'Under Review': 'Our team is carefully reviewing your qualifications.',
       'Interview Scheduled': 'An interview has been scheduled. Check your dashboard for details.',

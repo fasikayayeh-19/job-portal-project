@@ -12,6 +12,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { AdminModule } from './admin/admin.module';
 import { JobsModule } from './jobs/jobs.module';
 import { CategoriesModule } from './categories/categories.module';
+import { SavedJobsModule } from './saved-jobs/saved-jobs.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -54,6 +55,8 @@ import { CategoriesModule } from './categories/categories.module';
     JobsModule,
 
     CategoriesModule,
+
+    SavedJobsModule,
   
   ],
   providers:[

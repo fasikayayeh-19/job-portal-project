@@ -8,28 +8,30 @@ import { MailService } from './mail.service';
   imports: [
     ConfigModule,
 
-    MailerModule.forRootAsync({
-      imports: [ConfigModule],
+  MailerModule.forRootAsync({
+  imports: [ConfigModule],
 
-      inject: [ConfigService],
+  inject: [ConfigService],
 
-      useFactory: (config: ConfigService) => ({
-        transport: {
-          host: config.get('MAIL_HOST'),
-          port: Number(config.get('MAIL_PORT')),
-          secure: false,
+  useFactory: (config: ConfigService) => ({
+ transport: {
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  requireTLS: true,
+  family: 4,
 
-          auth: {
-            user: config.get('MAIL_USER'),
-            pass: config.get('MAIL_PASSWORD'),
-          },
-        },
+  auth: {
+    user: config.get<string>('MAIL_USER'),
+    pass: config.get<string>('MAIL_PASSWORD'),
+  },
+},
 
-        defaults: {
-          from: config.get('MAIL_FROM'),
-        },
-      }),
-    }),
+    defaults: {
+      from: config.get<string>('MAIL_FROM'),
+    },
+  }),
+}),
   ],
 
   providers: [MailService],
