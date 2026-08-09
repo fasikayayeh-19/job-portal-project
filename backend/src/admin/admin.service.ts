@@ -88,6 +88,21 @@ async getCompanies() {
       message: 'Company rejected',
     };
   }
+
+  async getApplications() {
+  return this.applicationRepository.find({
+    relations: {
+      seeker: true,
+      job: {
+        company: true,
+      },
+    },
+
+    order: {
+      createdAt: 'DESC',
+    },
+  });
+}
   async getJobs() {
   return this.jobRepository.find({
     relations: {
@@ -98,5 +113,44 @@ async getCompanies() {
       createdAt: 'DESC',
     },
   });
+}
+async getDashboardStats() {
+  const [
+    totalUsers,
+    totalCompanies,
+    pendingCompanies,
+    approvedCompanies,
+    totalJobs,
+    totalApplications,
+  ] = await Promise.all([
+    this.userRepository.count(),
+
+    this.companyRepository.count(),
+
+    this.companyRepository.count({
+      where: {
+        status: CompanyStatus.PENDING,
+      },
+    }),
+
+    this.companyRepository.count({
+      where: {
+        status: CompanyStatus.APPROVED,
+      },
+    }),
+
+    this.jobRepository.count(),
+
+    this.applicationRepository.count(),
+  ]);
+
+  return {
+    totalUsers,
+    totalCompanies,
+    pendingCompanies,
+    approvedCompanies,
+    totalJobs,
+    totalApplications,
+  };
 }
 }

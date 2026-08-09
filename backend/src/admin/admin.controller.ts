@@ -57,7 +57,12 @@ return this.adminService.getPendingCompanies();
 getJobs() {
   return this.adminService.getJobs();
 }
-
+@Get('applications')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
+getApplications() {
+  return this.adminService.getApplications();
+}
 @Patch('companies/:id/approve')
 @UseGuards(
  JwtAuthGuard,
@@ -95,6 +100,13 @@ return this.adminService.rejectCompany(id);
 @Roles('ADMIN')
 getUsers() {
   return this.adminService.getUsers();
+}
+
+@Get('dashboard')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
+getDashboardStats() {
+  return this.adminService.getDashboardStats();
 }
 
 }
