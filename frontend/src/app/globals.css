@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f8fafc;
+  --foreground: #172033;
+
+  /* Job Portal Brand Colors */
+  --primary: #0877b9;
+  --primary-dark: #075985;
+  --secondary: #16a6a6;
+  --secondary-dark: #0f8f91;
+
+  /* Light brand background */
+  --brand-light: #eff9fa;
+
+  /* Borders */
+  --border: #e2e8f0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-dark: var(--secondary-dark);
+
+  --color-brand-light: var(--brand-light);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Dark mode */
+.dark {
+  --background: #071a2b;
+  --foreground: #f1f5f9;
+
+  --border: #1e3a4d;
+
+  --brand-light: #0b2638;
+}
