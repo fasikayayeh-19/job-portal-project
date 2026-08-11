@@ -1,38 +1,25 @@
 import {
- IsString,
- IsOptional,
+  IsOptional,
+  IsString,
+  IsUrl,
 } from 'class-validator';
 
-
-
 export class CreateCompanyDto {
+  @IsString()
+  companyName!: string;
 
+  @IsOptional()
+  @IsUrl()
+  website?: string;
 
-@IsString()
-companyName!:string;
+  @IsOptional()
+  @IsString()
+  phone?: string;
 
+  @IsOptional()
+  @IsString()
+  description?: string;
 
-
-@IsOptional()
-@IsString()
-description?:string;
-
-
-
-@IsOptional()
-@IsString()
-website?:string;
-
-
-
-@IsOptional()
-@IsString()
-logo?:string;
-
-
-
-@IsString()
-location!:string;
-
-
+  @IsString()
+  location!: string;
 }

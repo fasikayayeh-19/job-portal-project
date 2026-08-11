@@ -7,10 +7,13 @@ import { AuthService } from './auth.service';
 
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { CompaniesModule } from '../companies/companies.module';
+import { CompaniesService } from '../companies/companies.service';
 
 @Module({
   imports: [
     UsersModule,
+    CompaniesModule,
 
     JwtModule.registerAsync({
       imports: [ConfigModule],

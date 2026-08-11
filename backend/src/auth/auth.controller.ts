@@ -15,12 +15,10 @@ export class AuthController {
     private authService: AuthService,
   ) {}
 
-  @Post('register')
-  register(
-    @Body() dto: RegisterDto,
-  ) {
-    return this.authService.register(dto);
-  }
+ @Post('register')
+async register(@Body() dto: RegisterDto) {
+  return this.authService.register(dto);
+}
 
   @Post('login')
   login(

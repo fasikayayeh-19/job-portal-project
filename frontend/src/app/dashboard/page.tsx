@@ -1,101 +1,96 @@
-import DashboardLayout from '../../components/layout/DashboardLayout';
+'use client';
 
-export default function DashboardPage() {
-  return (
-    <DashboardLayout>
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-      <div className="space-y-6">
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            Dashboard
-          </h1>
+import JobSeekerDashboard from '@/components/dashboard/JobSeekerDashboard';
+import CompanyDashboard from '@/components/dashboard/CompanyDashboard';
+import AdminDashboard from '@/components/dashboard/AdminDashboard';
 
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Manage your Job Portal account
-          </p>
-        </div>
+type UserRole =
+  | 'JOB_SEEKER'
+  | 'COMPANY'
+  | 'ADMIN';
 
-        {/* Welcome */}
-        <section
-          className="
-            rounded-2xl
-            bg-[#1671B9]
-            p-6
-            text-white
-            shadow-lg
-          "
-        >
-          <h2 className="text-2xl font-bold">
-            Welcome back 👋
-          </h2>
+interface User {
+  id: string;
+  email: string;
 
-          <p className="mt-2 text-blue-100">
-            Here is your Job Portal overview.
-          </p>
-        </section>
+  role: UserRole;
 
-        {/* Cards */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  firstName?: string;
+  lastName?: string;
 
-          <DashboardCard
-            title="Applications"
-            value="0"
-          />
-
-          <DashboardCard
-            title="Saved Jobs"
-            value="0"
-          />
-
-          <DashboardCard
-            title="Notifications"
-            value="0"
-          />
-
-          <DashboardCard
-            title="Profile"
-            value="Complete"
-          />
-
-        </div>
-
-      </div>
-
-    </DashboardLayout>
-  );
+  company?: {
+    companyName: string;
+  };
 }
 
-function DashboardCard({
-  title,
-  value,
-}: {
-  title: string;
-  value: string;
-}) {
-  return (
-    <div
-      className="
-        rounded-xl
-        border border-slate-200
-        bg-white
-        p-5
-        shadow-sm
-        transition
-        hover:-translate-y-1
-        hover:shadow-md
-        dark:border-slate-700
-        dark:bg-slate-900
-      "
-    >
-      <p className="text-sm text-slate-500 dark:text-slate-400">
-        {title}
-      </p>
+export default function DashboardPage() {
+  const router = useRouter();
 
-      <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-        {value}
-      </p>
-    </div>
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+
+    if (!storedUser) {
+      router.replace('/login');
+      return;
+    }
+
+    try {
+      const parsedUser = JSON.parse(storedUser) as User;
+
+      setUser(parsedUser);
+    } catch (error) {
+      console.error('Invalid user data:', error);
+
+      localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
+
+      router.replace('/login');
+      return;
+    }
+
+    setLoading(false);
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-sm text-slate-500 dark:text-slate-400">
+          Loading dashboard...
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <DashboardLayout user={user}>
+
+      {/* Job Seeker */}
+      {user.role === 'JOB_SEEKER' && (
+        <JobSeekerDashboard user={user} />
+      )}
+
+      {/* Company */}
+      {user.role === 'COMPANY' && (
+        <CompanyDashboard user={user} />
+      )}
+
+      {/* Admin */}
+      {user.role === 'ADMIN' && (
+        <AdminDashboard user={user} />
+      )}
+
+    </DashboardLayout>
   );
 }

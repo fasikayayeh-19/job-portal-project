@@ -56,7 +56,7 @@ export class Company {
 
 
   @Column({
-    default:'PENDING',
+    default:CompanyStatus.PENDING,
   })
   status!:CompanyStatus;
 

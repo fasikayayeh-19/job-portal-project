@@ -1,5 +1,5 @@
 'use client';
-
+import { toast } from 'sonner';
 import Link from 'next/link';
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
+import api from '@/lib/axios';
 const registerSchema = z
   .object({
     role: z.enum(['JOB_SEEKER', 'COMPANY']),
@@ -18,7 +19,7 @@ const registerSchema = z
     website: z.string().optional(),
     phone: z.string().optional(),
     description: z.string().optional(),
-
+    location: z.string().optional(),
     email: z.string().email('Please enter a valid email'),
 
     password: z
@@ -94,9 +95,62 @@ export default function RegisterPage() {
     setValue('role', type);
   };
 
-  const onSubmit = async (data: RegisterFormData) => {
-    console.log('REGISTER DATA:', data);
+const onSubmit = async (data: RegisterFormData) => {
+  try {
+   const { confirmPassword, ...registerData } = data;
 
+console.log('REGISTER DATA:', registerData);
+console.log('LOCATION:', data.location);
+
+const response = await api.post(
+  '/auth/register',
+  registerData,
+);
+
+    console.log('Registration response:', response.data);
+
+    const { accessToken, user } = response.data;
+
+    if (!accessToken || !user) {
+      console.error(
+        'Registration response does not contain authentication data:',
+        response.data,
+      );
+
+      toast.error('Registration failed', {
+        description:
+          'The account was created, but the server did not return login information.',
+      });
+
+      return;
+    }
+
+    // Save authentication data
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('user', JSON.stringify(user));
+
+    toast.success('Registration successful!', {
+      description: 'Your account has been created. Welcome to Job Portal!',
+    });
+
+    // Go directly to dashboard
+    window.location.href = '/dashboard';
+  } catch (error: any) {
+  console.error('Registration failed:', error);
+
+  console.error(
+    'Backend response:',
+    error.response?.data,
+  );
+
+  toast.error('Registration failed', {
+    description:
+      Array.isArray(error.response?.data?.message)
+        ? error.response.data.message.join(', ')
+        : error.response?.data?.message ||
+          'Something went wrong.',
+  });
+}
     // Backend connection will be added here.
   };
 
@@ -290,6 +344,28 @@ export default function RegisterPage() {
                     </p>
                   )}
                 </div>
+                <div>
+  <label
+    htmlFor="location"
+    className="mb-2 block text-sm font-medium text-slate-700 dark:text-white"
+  >
+    Location
+  </label>
+
+  <input
+    id="location"
+    type="text"
+    placeholder="Addis Ababa, Ethiopia"
+    {...register('location')}
+    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#1671B9] focus:ring-2 focus:ring-[#1671B9]/20 dark:border-[#334155] dark:bg-[#1e293b] dark:text-white dark:placeholder:text-[#64748b]"
+  />
+
+  {errors.location && (
+    <p className="mt-1 text-sm text-red-500">
+      {errors.location.message}
+    </p>
+  )}
+</div>
 
                 <div>
                   <label

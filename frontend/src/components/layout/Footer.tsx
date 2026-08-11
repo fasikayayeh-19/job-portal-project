@@ -1,28 +1,29 @@
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
+import Image from 'next/image';
 
 export default function Footer() {
   return (
-    <footer className="border-t border-slate-200 bg-white border- shadow-2xl dark:border-slate-800 dark:bg-[#020817]">
-      <div className="mx-auto ml-2 px-5 sm:px-6 lg:px-8">
-
-        {/* Main Footer */}
+    <footer className="border-t border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-[#020817]">
+      <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+        {/* Main Footer Grid */}
         <div className="grid grid-cols-1 gap-10 py-14 md:grid-cols-2 lg:grid-cols-4 lg:gap-16">
-
-          {/* Brand */}
+          {/* Brand Column */}
           <div className="lg:col-span-1">
-            <Link
-              href="/"
-              className="inline-flex items-center text-xl font-bold tracking-tight text-[#1671B9] transition-colors duration-200 hover:text-[#0F5F9E] dark:text-[#4da3e8] dark:hover:text-[#69b6f2]"
-            >
-              Job Portal
+            <Link href="/" className="inline-flex items-center">
+              <Image
+                src={process.env.NEXT_PUBLIC_LOGO_URL!}
+                alt="Job Portal"
+                width={120}
+                height={40}
+                priority
+                className="h-auto w-auto object-contain"
+              />
             </Link>
-
             <p className="mt-4 max-w-sm text-sm leading-6 text-slate-500 dark:text-slate-400">
-              Connecting talented people with companies and opportunities
-              that help careers and businesses grow.
+              Connecting talented people with companies and opportunities that
+              help careers and businesses grow.
             </p>
-
             <Link
               href="/jobs"
               className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#1671B9] transition-colors duration-200 hover:text-[#0F5F9E] dark:text-[#4da3e8] dark:hover:text-[#69b6f2]"
@@ -37,7 +38,6 @@ export default function Footer() {
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
               Job Seekers
             </h3>
-
             <ul className="mt-5 space-y-3">
               <li>
                 <Link
@@ -47,7 +47,6 @@ export default function Footer() {
                   Find Jobs
                 </Link>
               </li>
-
               <li>
                 <Link
                   href="/companies"
@@ -56,7 +55,6 @@ export default function Footer() {
                   Explore Companies
                 </Link>
               </li>
-
               <li>
                 <Link
                   href="/register"
@@ -65,7 +63,6 @@ export default function Footer() {
                   Create Account
                 </Link>
               </li>
-
               <li>
                 <Link
                   href="/login"
@@ -82,7 +79,6 @@ export default function Footer() {
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
               Employers
             </h3>
-
             <ul className="mt-5 space-y-3">
               <li>
                 <Link
@@ -92,7 +88,6 @@ export default function Footer() {
                   Create Company Account
                 </Link>
               </li>
-
               <li>
                 <Link
                   href="/companies"
@@ -101,7 +96,6 @@ export default function Footer() {
                   Find Companies
                 </Link>
               </li>
-
               <li>
                 <Link
                   href="/about"
@@ -110,7 +104,6 @@ export default function Footer() {
                   About Job Portal
                 </Link>
               </li>
-
               <li>
                 <Link
                   href="/contact"
@@ -127,7 +120,6 @@ export default function Footer() {
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
               Company
             </h3>
-
             <ul className="mt-5 space-y-3">
               <li>
                 <Link
@@ -137,7 +129,6 @@ export default function Footer() {
                   About Us
                 </Link>
               </li>
-
               <li>
                 <Link
                   href="/contact"
@@ -146,7 +137,6 @@ export default function Footer() {
                   Contact
                 </Link>
               </li>
-
               <li>
                 <Link
                   href="/privacy"
@@ -155,7 +145,6 @@ export default function Footer() {
                   Privacy Policy
                 </Link>
               </li>
-
               <li>
                 <Link
                   href="/terms"
@@ -170,11 +159,9 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="flex flex-col gap-4 border-t border-slate-200 py-6 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
-
           <p className="text-xs text-slate-400 dark:text-slate-500">
             © {new Date().getFullYear()} Job Portal. All rights reserved.
           </p>
-
           <div className="flex items-center gap-5">
             <Link
               href="/privacy"
@@ -182,14 +169,12 @@ export default function Footer() {
             >
               Privacy
             </Link>
-
             <Link
               href="/terms"
               className="text-xs text-slate-400 transition-colors hover:text-[#1671B9] dark:text-slate-500 dark:hover:text-[#4da3e8]"
             >
               Terms
             </Link>
-
             <Link
               href="/contact"
               className="text-xs text-slate-400 transition-colors hover:text-[#1671B9] dark:text-slate-500 dark:hover:text-[#4da3e8]"
@@ -197,7 +182,6 @@ export default function Footer() {
               Support
             </Link>
           </div>
-
         </div>
       </div>
     </footer>

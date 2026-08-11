@@ -1,6 +1,6 @@
-import "./globals.css";
-import ThemeProvider from "@/components/providers/ThemeProvider";
-import MainLayout from "@/components/layout/MainLayout";
+import './globals.css';
+import ThemeProvider from '@/components/providers/ThemeProvider';
+import MainLayout from '@/components/layout/MainLayout';
 
 export default function RootLayout({
   children,

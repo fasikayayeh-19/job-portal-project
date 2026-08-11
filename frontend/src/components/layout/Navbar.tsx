@@ -4,13 +4,16 @@ import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { useState ,useEffect} from 'react';
 import Image from 'next/image';
+import { type AuthUser, getCurrentUser } from '@/lib/auth';
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
  const pathname = usePathname();
 const [isNavigating, setIsNavigating] = useState(false);
 
+const [user, setUser] = useState<AuthUser | null>(null);
+
 useEffect(() => {
-  setIsNavigating(false);
+  setUser(getCurrentUser());
 }, [pathname]);
 
 const handleNavigation = () => {
@@ -143,37 +146,79 @@ const handleNavigation = () => {
 </div>
 
         {/* Desktop Authentication */}
-        <div className="hidden items-center gap-3 md:flex">
+<div className="hidden items-center gap-3 md:flex">
 
-          <Link
-            href="/login"
-            className="rounded-lg px-4 py-2 text-lg font-medium text-slate-800 transition-colors hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-[#4da3e8]"
-          >
-            Login
-          </Link>
+  {user ? (
+    <>
+      <Link
+        href="/dashboard"
+        onClick={handleNavigation}
+        className="rounded-lg bg-[#1671B9] px-5 py-2.5 text-lg font-medium text-white transition-all hover:bg-[#0F5F9E] hover:shadow-md"
+      >
+        Dashboard
+      </Link>
 
-          <Link
-            href="/register"
-            className="rounded-lg bg-[#1671B9] px-5 py-2.5 text-lg font-medium text-white transition-all hover:bg-[#0F5F9E] hover:shadow-md"
-          >
-            Sign Up
-          </Link>
-           <div className="ml-5 flex items-center whitespace-nowrap text-[12px] text-slate-400">
-              <span className="mr-2 ">|</span>
-
-              <span className="mr-2 text-lg">
-                Employers:
-              </span>
-
-              <Link
-                href="/register"
-                className="text-lg text-primary transition hover:text-secondary hover:underline"
-              >
-                Are you recruiting?
-              </Link>
-            </div>
-
+      <div className="ml-3 flex items-center gap-2">
+        <div className="h-9 w-9 rounded-full bg-[#1671B9] flex items-center justify-center text-white font-semibold">
+          {user.role === 'COMPANY'
+            ? user.company?.companyName?.charAt(0).toUpperCase()
+            : user.firstName?.charAt(0).toUpperCase()}
         </div>
+
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold text-slate-800 dark:text-white">
+            {user.role === 'COMPANY'
+              ? user.company?.companyName
+              : `${user.firstName ?? ''} ${user.lastName ?? ''}`}
+          </span>
+
+          <span className="text-xs text-slate-500 dark:text-slate-400">
+            {user.role === 'JOB_SEEKER'
+              ? 'Job Seeker'
+              : user.role === 'COMPANY'
+                ? 'Employer'
+                : 'Administrator'}
+          </span>
+        </div>
+      </div>
+    </>
+  ) : (
+    <>
+      <Link
+        href="/login"
+        onClick={handleNavigation}
+        className="rounded-lg px-4 py-2 text-lg font-medium text-slate-800 transition-colors hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-[#4da3e8]"
+      >
+        Login
+      </Link>
+
+      <Link
+        href="/register"
+        onClick={handleNavigation}
+        className="rounded-lg bg-[#1671B9] px-5 py-2.5 text-lg font-medium text-white transition-all hover:bg-[#0F5F9E] hover:shadow-md"
+      >
+        Sign Up
+      </Link>
+
+      <div className="ml-5 flex items-center whitespace-nowrap text-[12px] text-slate-400">
+        <span className="mr-2">|</span>
+
+        <span className="mr-2 text-lg">
+          Employers:
+        </span>
+
+        <Link
+          href="/register"
+          onClick={handleNavigation}
+          className="text-lg text-[#1671B9] transition hover:text-[#0F5F9E] hover:underline"
+        >
+          Are you recruiting?
+        </Link>
+      </div>
+    </>
+  )}
+
+</div>
 
         {/* Mobile Menu Button */}
         <button
