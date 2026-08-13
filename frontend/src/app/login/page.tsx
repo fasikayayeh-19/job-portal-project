@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/axios';
+import { getCurrentUser } from '@/lib/auth';
 
 const loginSchema = z.object({
   email: z
@@ -73,7 +74,9 @@ export default function LoginPage() {
       );
 
       // Redirect to the common dashboard.
-      router.push('/dashboard');
+if (getCurrentUser()) {
+  router.push('/dashboard');
+}
 
     } catch (error: any) {
       console.error('LOGIN ERROR:', error);

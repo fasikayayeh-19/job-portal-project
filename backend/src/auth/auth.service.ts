@@ -21,145 +21,160 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly companiesService: CompaniesService,
   ) {}
+  private formatUser(user: any, company?: any) {
+  return {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+
+    firstName: user.firstName,
+    lastName: user.lastName,
+
+    phone: user.phone,
+    location: user.location,
+    professionalTitle: user.professionalTitle,
+    bio: user.bio,
+
+    profileImageUrl: user.profileImageUrl,
+
+    resumeUrl: user.resumeUrl,
+    resumeFileName: user.resumeFileName,
+
+    company: company
+      ? {
+          companyName: company.companyName,
+        }
+      : user.company
+        ? {
+            companyName: user.company.companyName,
+          }
+        : undefined,
+  };
+}
 
   // =========================
   // REGISTER
   // =========================
 
   async register(dto: RegisterDto) {
-    // 1. Check existing email
-    const existingUser =
-      await this.usersService.findByEmail(dto.email);
+  // 1. Check existing email
+  const existingUser =
+    await this.usersService.findByEmail(dto.email);
 
-    if (existingUser) {
-      throw new ConflictException(
-        'Email already exists',
-      );
-    }
-
-    // 2. Hash password
-    const hashedPassword = await bcrypt.hash(
-      dto.password,
-      10,
+  if (existingUser) {
+    throw new ConflictException(
+      'Email already exists',
     );
+  }
 
-    // 3. Create user
-    const user = await this.usersService.create({
-      email: dto.email,
-      password: hashedPassword,
-      role: dto.role,
-      firstName: dto.firstName,
-      lastName: dto.lastName,
-    });
+  // 2. Hash password
+  const hashedPassword =
+    await bcrypt.hash(dto.password, 10);
 
-    // 4. Company is optional
-    let company: {
-      companyName: string;
-    } | null = null;
+  // 3. Create user
+  const user = await this.usersService.create({
+    email: dto.email,
+    password: hashedPassword,
+    role: dto.role,
+    firstName: dto.firstName,
+    lastName: dto.lastName,
+  });
 
-    // 5. Create company for COMPANY account
-    if (dto.role === 'COMPANY') {
- const createdCompany =
-  await this.companiesService.create(
-    {
-      companyName: dto.companyName!,
-      website: dto.website,
-      phone: dto.phone,
-      description: dto.description,
-      location: dto.location,
-    },
-    user,
-  );
+  // 4. Company
+  let company: {
+    companyName: string;
+  } | null = null;
 
-  company = {
-    companyName: createdCompany.companyName,
-  };
-}
-    // 6. JWT payload
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    };
+  if (dto.role === 'COMPANY') {
+    const createdCompany =
+      await this.companiesService.create(
+        {
+          companyName: dto.companyName!,
+          website: dto.website,
+          phone: dto.phone,
+          description: dto.description,
+          location: dto.location,
+        },
+        user,
+      );
 
-    // 7. Generate token
-    const accessToken =
-      this.jwtService.sign(payload);
-
-    // 8. Return authentication data
-    return {
-      accessToken,
-
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName,
-
-        company: company
-          ? {
-              companyName: company.companyName,
-            }
-          : undefined,
-      },
+    company = {
+      companyName:
+        createdCompany.companyName,
     };
   }
+
+  // 5. JWT
+  const payload = {
+    sub: user.id,
+    email: user.email,
+    role: user.role,
+  };
+
+  const accessToken =
+    this.jwtService.sign(payload);
+
+  // 6. Return complete user
+  return {
+    accessToken,
+
+    user: this.formatUser(
+      user,
+      company,
+    ),
+  };
+}
 
   // =========================
   // LOGIN
   // =========================
 
-  async login(dto: LoginDto) {
-    // 1. Find user
-    const user =
-      await this.usersService.findByEmail(
-        dto.email,
-      );
+ async login(dto: LoginDto) {
+  const user = await this.usersService.findByEmail(
+    dto.email,
+  );
 
-    if (!user) {
-      throw new UnauthorizedException(
-        'Invalid email or password',
-      );
-    }
+  if (!user) {
+    throw new UnauthorizedException(
+      'Invalid email or password',
+    );
+  }
 
-    // 2. Check password
-    const isPasswordValid =
-      await bcrypt.compare(
-        dto.password,
-        user.password,
-      );
+  console.log('LOGIN USER ID:', user.id);
+  console.log('LOGIN PASSWORD HASH:', user.password);
 
-    if (!isPasswordValid) {
-      throw new UnauthorizedException(
-        'Invalid email or password',
-      );
-    }
+  const isPasswordValid = await bcrypt.compare(
+    dto.password,
+    user.password,
+  );
 
-    // 3. JWT payload
-    const payload = {
-      sub: user.id,
+  console.log('PASSWORD VALID:', isPasswordValid);
+
+  if (!isPasswordValid) {
+    throw new UnauthorizedException(
+      'Invalid email or password',
+    );
+  }
+
+  const payload = {
+    sub: user.id,
+    email: user.email,
+    role: user.role,
+  };
+
+  const accessToken =
+    this.jwtService.sign(payload);
+
+  return {
+    message: 'Login successful',
+    accessToken,
+    user: {
+      id: user.id,
       email: user.email,
       role: user.role,
-    };
-
-    // 4. Generate token
-    const accessToken =
-      this.jwtService.sign(payload);
-
-    // 5. Return authentication data
-    return {
-      message: 'Login successful',
-
-      accessToken,
-
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName,
-      },
-    };
-  }
+      firstName: user.firstName,
+      lastName: user.lastName,
+    },
+  };
+}
 }

@@ -1,6 +1,8 @@
+
 'use client';
 
 import { usePathname } from 'next/navigation';
+
 import Navbar from './Navbar';
 import Footer from './Footer';
 
@@ -14,22 +16,26 @@ export default function MainLayout({
   const hideLayout =
     pathname === '/login' ||
     pathname === '/register' ||
-    pathname === '/forgot-password';
+    pathname === '/forgot-password' ||
+    pathname === '/profile';
+
+  const isDashboard = pathname.startsWith('/dashboard');
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-slate-900 dark:bg-slate-950 dark:text-white">
+    <div className="flex min-h-screen flex-col">
 
       {/* Navbar */}
       {!hideLayout && <Navbar />}
 
-      {/* Main content */}
-      <main className="flex-1 w-full">
+      {/* Main Content */}
+      <main className="w-full flex-1">
         {children}
       </main>
 
-      {/* Footer */}
-      {!hideLayout && <Footer />}
+      {/* Footer - hidden on dashboard */}
+      {!hideLayout && !isDashboard && <Footer />}
 
     </div>
   );
 }
+

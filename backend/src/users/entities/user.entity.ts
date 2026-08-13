@@ -17,13 +17,16 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
+  // =====================================================
+  // BASIC PROFILE
+  // =====================================================
+
   @Column({ nullable: true })
   firstName?: string;
 
   @Column({ nullable: true })
   lastName?: string;
 
-  
   @Column({
     unique: true,
   })
@@ -42,17 +45,52 @@ export class User {
   })
   status!: string;
 
+  // =====================================================
+  // PROFILE INFORMATION
+  // =====================================================
+
+  @Column({ nullable: true })
+  phone?: string;
+
+  @Column({ nullable: true })
+  location?: string;
+
+  @Column({ nullable: true })
+  professionalTitle?: string;
+
+  @Column({ type: 'text', nullable: true })
+  bio?: string;
+
+  // =====================================================
+  // PROFILE IMAGE
+  // =====================================================
+
+  @Column({ nullable: true })
+  profileImageUrl?: string;
+
+  // =====================================================
+  // RESUME
+  // =====================================================
+
+  @Column({ nullable: true })
+  resumeUrl?: string;
+
+  @Column({ nullable: true })
+  resumeFileName?: string;
+
+  // =====================================================
+  // COMPANY RELATION
+  // =====================================================
+
   @OneToOne(
     () => Company,
     company => company.user,
   )
   company?: Company;
 
-  @CreateDateColumn()
-  createdAt!: Date;
-
-  @UpdateDateColumn()
-  updatedAt!: Date;
+  // =====================================================
+  // APPLICATIONS
+  // =====================================================
 
   @OneToMany(
     () => Application,
@@ -60,9 +98,23 @@ export class User {
   )
   applications!: Application[];
 
+  // =====================================================
+  // NOTIFICATIONS
+  // =====================================================
+
   @OneToMany(
     () => Notification,
     notification => notification.user,
   )
   notifications!: Notification[];
+
+  // =====================================================
+  // TIMESTAMPS
+  // =====================================================
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
 }

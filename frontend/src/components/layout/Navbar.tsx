@@ -3,6 +3,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { useState ,useEffect} from 'react';
+import { User } from '@/types/user';
 import Image from 'next/image';
 import { type AuthUser, getCurrentUser } from '@/lib/auth';
 export default function Navbar() {
@@ -13,7 +14,19 @@ const [isNavigating, setIsNavigating] = useState(false);
 const [user, setUser] = useState<AuthUser | null>(null);
 
 useEffect(() => {
-  setUser(getCurrentUser());
+  const updateUser = () => {
+    setUser(getCurrentUser());
+  };
+
+  // Load initially
+  updateUser();
+
+  // Listen for profile changes
+  window.addEventListener('userUpdated', updateUser);
+
+  return () => {
+    window.removeEventListener('userUpdated', updateUser);
+  };
 }, [pathname]);
 
 const handleNavigation = () => {
@@ -159,28 +172,43 @@ const handleNavigation = () => {
       </Link>
 
       <div className="ml-3 flex items-center gap-2">
-        <div className="h-9 w-9 rounded-full bg-[#1671B9] flex items-center justify-center text-white font-semibold">
-          {user.role === 'COMPANY'
-            ? user.company?.companyName?.charAt(0).toUpperCase()
-            : user.firstName?.charAt(0).toUpperCase()}
-        </div>
+  <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1671B9] text-sm font-semibold text-white">
+  {user.profileImageUrl ? (
+    <img
+      src={`http://localhost:3000${user.profileImageUrl}`}
+      alt="Profile"
+      className="h-full w-full object-cover"
+    />
+  ) : (
+    <span>
+      {user.role === 'COMPANY'
+        ? user.company?.companyName?.charAt(0).toUpperCase() || 'C'
+        : user.role === 'ADMIN'
+          ? 'A'
+          : user.firstName?.charAt(0).toUpperCase() || 'J'}
+    </span>
+  )}
+</div>
 
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold text-slate-800 dark:text-white">
-            {user.role === 'COMPANY'
-              ? user.company?.companyName
-              : `${user.firstName ?? ''} ${user.lastName ?? ''}`}
-          </span>
+<div className="flex min-w-0 flex-col">
+  <span className="max-w-40 truncate text-sm font-semibold text-slate-800 dark:text-white">
+    {user.role === 'COMPANY'
+      ? user.company?.companyName || 'Company'
+      : user.role === 'ADMIN'
+        ? 'Administrator'
+        : `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() ||
+          'Job Seeker'}
+  </span>
 
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            {user.role === 'JOB_SEEKER'
-              ? 'Job Seeker'
-              : user.role === 'COMPANY'
-                ? 'Employer'
-                : 'Administrator'}
-          </span>
-        </div>
-      </div>
+  <span className="text-xs text-slate-500 dark:text-slate-400">
+    {user.role === 'JOB_SEEKER'
+      ? 'Job Seeker'
+      : user.role === 'COMPANY'
+        ? 'Employer'
+        : 'Administrator'}
+  </span>
+</div>
+</div>
     </>
   ) : (
     <>

@@ -2,19 +2,26 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+import { getCurrentUser } from '@/lib/auth';
+
 import {
   LayoutDashboard,
-  User,
-  Briefcase,
+  UserRound,
+  Search,
+  BriefcaseBusiness,
   Bookmark,
   FileText,
   Building2,
   Users,
-  Bell,
+  ClipboardList,
   Settings,
   LogOut,
   X,
-  ClipboardList,
+  Plus,
+  ShieldCheck,
+  BarChart3,
 } from 'lucide-react';
 
 type UserRole = 'JOB_SEEKER' | 'COMPANY' | 'ADMIN';
@@ -26,6 +33,16 @@ interface SidebarUser {
 
   firstName?: string;
   lastName?: string;
+
+  phone?: string;
+  location?: string;
+  professionalTitle?: string;
+  bio?: string;
+
+  profileImageUrl?: string;
+
+  resumeUrl?: string;
+  resumeFileName?: string;
 
   company?: {
     companyName: string;
@@ -44,6 +61,11 @@ interface MenuItem {
   icon: React.ReactNode;
 }
 
+
+/* ============================================================
+   SIDEBAR
+============================================================ */
+
 export default function Sidebar({
   user,
   isOpen,
@@ -52,11 +74,43 @@ export default function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
 
-  /*
-   * -------------------------------------------------------
-   * Common menu items
-   * -------------------------------------------------------
-   */
+  const [currentUser, setCurrentUser] =
+    useState<SidebarUser>(user);
+
+  useEffect(() => {
+    // Get latest user from localStorage
+    const updateUser = () => {
+      const storedUser = getCurrentUser();
+
+      if (storedUser) {
+        setCurrentUser(storedUser);
+      }
+    };
+
+    // Initial load
+    updateUser();
+
+    // Listen for profile updates
+    window.addEventListener(
+      'userUpdated',
+      updateUser,
+    );
+
+    return () => {
+      window.removeEventListener(
+        'userUpdated',
+        updateUser,
+      );
+    };
+  }, []);
+
+  // Your other Sidebar code starts here...
+
+  /* ==========================================================
+     COMMON
+     Profile + Notifications are intentionally NOT here.
+     They will be in the dashboard header.
+  ========================================================== */
 
   const commonItems: MenuItem[] = [
     {
@@ -65,33 +119,21 @@ export default function Sidebar({
       icon: <LayoutDashboard size={19} />,
     },
     {
-      label: 'Notifications',
-      href: '/dashboard/notifications',
-      icon: <Bell size={19} />,
-    },
-    {
       label: 'Settings',
       href: '/dashboard/settings',
       icon: <Settings size={19} />,
     },
   ];
 
-  /*
-   * -------------------------------------------------------
-   * Job Seeker menu
-   * -------------------------------------------------------
-   */
+  /* ==========================================================
+     JOB SEEKER
+  ========================================================== */
 
   const jobSeekerItems: MenuItem[] = [
     {
-      label: 'Profile',
-      href: '/dashboard/profile',
-      icon: <User size={19} />,
-    },
-    {
       label: 'Find Jobs',
       href: '/jobs',
-      icon: <Briefcase size={19} />,
+      icon: <Search size={19} />,
     },
     {
       label: 'My Applications',
@@ -105,11 +147,9 @@ export default function Sidebar({
     },
   ];
 
-  /*
-   * -------------------------------------------------------
-   * Company menu
-   * -------------------------------------------------------
-   */
+  /* ==========================================================
+     COMPANY
+  ========================================================== */
 
   const companyItems: MenuItem[] = [
     {
@@ -120,20 +160,28 @@ export default function Sidebar({
     {
       label: 'My Jobs',
       href: '/dashboard/jobs',
-      icon: <Briefcase size={19} />,
+      icon: <BriefcaseBusiness size={19} />,
+    },
+    {
+      label: 'Post a Job',
+      href: '/dashboard/jobs/create',
+      icon: <Plus size={19} />,
     },
     {
       label: 'Applicants',
       href: '/dashboard/applicants',
       icon: <Users size={19} />,
     },
+    {
+      label: 'Applications',
+      href: '/dashboard/company-applications',
+      icon: <ClipboardList size={19} />,
+    },
   ];
 
-  /*
-   * -------------------------------------------------------
-   * Admin menu
-   * -------------------------------------------------------
-   */
+  /* ==========================================================
+     ADMIN
+  ========================================================== */
 
   const adminItems: MenuItem[] = [
     {
@@ -149,40 +197,71 @@ export default function Sidebar({
     {
       label: 'Jobs',
       href: '/dashboard/jobs',
-      icon: <Briefcase size={19} />,
+      icon: <BriefcaseBusiness size={19} />,
     },
     {
       label: 'Applications',
       href: '/dashboard/applications',
       icon: <ClipboardList size={19} />,
     },
+    {
+      label: 'Analytics',
+      href: '/dashboard/analytics',
+      icon: <BarChart3 size={19} />,
+    },
   ];
 
-  /*
-   * -------------------------------------------------------
-   * Select menu based on role
-   * -------------------------------------------------------
-   */
+  /* ==========================================================
+     SELECT ROLE MENU
+  ========================================================== */
 
   let roleItems: MenuItem[] = [];
 
-  if (user.role === 'JOB_SEEKER') {
+  if (currentUser.role === 'JOB_SEEKER') {
     roleItems = jobSeekerItems;
-  }
-
-  if (user.role === 'COMPANY') {
+  } else if (currentUser.role === 'COMPANY') {
     roleItems = companyItems;
-  }
-
-  if (user.role === 'ADMIN') {
+  } else if (currentUser.role === 'ADMIN') {
     roleItems = adminItems;
   }
 
-  /*
-   * -------------------------------------------------------
-   * Logout
-   * -------------------------------------------------------
-   */
+  /* ==========================================================
+     ROLE TITLE
+  ========================================================== */
+
+  const roleTitle =
+    currentUser.role === 'JOB_SEEKER'
+      ? 'Job Seeker'
+      : currentUser.role === 'COMPANY'
+        ? 'Company'
+        : 'Administration';
+
+  /* ==========================================================
+     DISPLAY NAME
+  ========================================================== */
+
+  const displayName =
+    currentUser.role === 'COMPANY'
+      ? currentUser.company?.companyName || 'Company'
+      : currentUser.role === 'ADMIN'
+        ? 'Administrator'
+        : `${currentUser.firstName ?? ''} ${currentUser.lastName ?? ''}`.trim() ||
+          'Job Seeker';
+
+  /* ==========================================================
+     ROLE LABEL
+  ========================================================== */
+
+  const roleLabel =
+    currentUser.role === 'JOB_SEEKER'
+      ? 'Job Seeker'
+      : currentUser.role === 'COMPANY'
+        ? 'Company'
+        : 'Administrator';
+
+  /* ==========================================================
+     LOGOUT
+  ========================================================== */
 
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
@@ -193,43 +272,14 @@ export default function Sidebar({
     router.push('/login');
   };
 
-  /*
-   * -------------------------------------------------------
-   * Display name
-   * -------------------------------------------------------
-   */
-
-  const displayName =
-    user.role === 'COMPANY'
-      ? user.company?.companyName || 'Company'
-      : user.role === 'ADMIN'
-        ? 'Administrator'
-        : `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() ||
-          'Job Seeker';
-
-  /*
-   * -------------------------------------------------------
-   * Role label
-   * -------------------------------------------------------
-   */
-
-  const roleLabel =
-    user.role === 'JOB_SEEKER'
-      ? 'Job Seeker'
-      : user.role === 'COMPANY'
-        ? 'Company'
-        : 'Administrator';
-
-  /*
-   * -------------------------------------------------------
-   * Render
-   * -------------------------------------------------------
-   */
+  /* ==========================================================
+     RENDER
+  ========================================================== */
 
   return (
     <>
-      {/* =====================================================
-          Mobile Overlay
+      {/* ======================================================
+          MOBILE OVERLAY
       ====================================================== */}
 
       {isOpen && (
@@ -248,8 +298,8 @@ export default function Sidebar({
         />
       )}
 
-      {/* =====================================================
-          Sidebar
+      {/* ======================================================
+          SIDEBAR
       ====================================================== */}
 
       <aside
@@ -278,9 +328,8 @@ export default function Sidebar({
           }
         `}
       >
-
-        {/* ===================================================
-            Sidebar Header
+        {/* ====================================================
+            HEADER
         ==================================================== */}
 
         <div
@@ -310,10 +359,12 @@ export default function Sidebar({
             Job Portal
           </Link>
 
-          {/* Mobile Close */}
+          {/* Mobile close button */}
+
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close dashboard menu"
             className="
               rounded-lg
               p-2
@@ -323,223 +374,204 @@ export default function Sidebar({
               hover:text-white
               md:hidden
             "
-            aria-label="Close dashboard menu"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* ===================================================
-            User Information
+        {/* ====================================================
+            USER INFORMATION
         ==================================================== */}
 
-        <div
-          className="
-            shrink-0
-            border-b
-            border-white/15
-            px-5
-            py-5
-          "
-        >
-          {/* Avatar */}
-          <div className="mb-3 flex items-center gap-3">
+       <div
+  className="
+    shrink-0
+    border-b
+    border-white/15
+    px-5
+    py-5
+  "
+>
+  <div className="mb-3 flex items-center gap-3">
 
-            <div
-              className="
-                flex
-                h-10
-                w-10
-                shrink-0
-                items-center
-                justify-center
-                rounded-full
-                bg-white
-                text-sm
-                font-bold
-                text-[#1671B9]
-              "
-            >
-              {displayName.charAt(0).toUpperCase()}
-            </div>
+    {/* Avatar */}
+    <div
+      className="
+        flex
+        h-11
+        w-11
+        shrink-0
+        items-center
+        justify-center
+        overflow-hidden
+        rounded-full
+        bg-white/20
+        text-white
+        ring-2
+        ring-white/20
+      "
+    >
+      {currentUser.profileImageUrl ? (
+        <img
+          src={`http://localhost:3000${currentUser.profileImageUrl}`}
+          alt={`${displayName} profile`}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <span className="text-sm font-bold">
+          {displayName
+            .charAt(0)
+            .toUpperCase()}
+        </span>
+      )}
+    </div>
 
-            <div className="min-w-0">
-              <p
-                className="
-                  truncate
-                  text-sm
-                  font-semibold
-                  text-white
-                "
-              >
-                {displayName}
-              </p>
+    {/* User information */}
+    <div className="min-w-0 flex-1">
+      <p
+        className="
+          truncate
+          text-sm
+          font-semibold
+          text-white
+        "
+      >
+        {displayName}
+      </p>
 
-              <p
-                className="
-                  mt-0.5
-                  truncate
-                  text-xs
-                  text-blue-100
-                "
-              >
-                {user.email}
-              </p>
-            </div>
+      <p
+        className="
+          mt-0.5
+          truncate
+          text-xs
+          text-white/70
+        "
+      >
+        {roleLabel}
+      </p>
+    </div>
+  </div>
 
-          </div>
+  {/* Role badge */}
+  <div>
+    <span
+      className="
+        inline-flex
+        items-center
+        gap-1.5
+        rounded-full
+        bg-white/10
+        px-2.5
+        py-1
+        text-[11px]
+        font-medium
+        text-white/80
+      "
+    >
+      <ShieldCheck size={12} />
+      {roleTitle}
+    </span>
+  </div>
+</div>
 
-          {/* Role */}
-          <div
-            className="
-              inline-flex
-              rounded-full
-              bg-white/15
-              px-2.5
-              py-1
-              text-[11px]
-              font-semibold
-              text-white
-            "
-          >
-            {roleLabel}
-          </div>
-        </div>
-
-        {/* ===================================================
-            Navigation
+        {/* ====================================================
+            NAVIGATION
         ==================================================== */}
+<nav className="flex-1 overflow-y-auto px-3 py-4">
 
-        <nav
-          className="
-            flex-1
-            overflow-y-auto
+  {/* Common */}
+  <div className="space-y-1">
+    {commonItems.map((item) => {
+      const active =
+        pathname === item.href;
+
+      return (
+        <Link
+          key={item.href}
+          href={item.href}
+          onClick={onClose}
+          className={`
+            flex
+            items-center
+            gap-3
+            rounded-xl
             px-3
-            py-5
-
-            scrollbar-thin
-          "
+            py-2.5
+            text-sm
+            font-medium
+            transition
+            ${
+              active
+                ? 'bg-white text-[#1671B9] shadow-sm'
+                : 'text-white/80 hover:bg-white/10 hover:text-white'
+            }
+          `}
         >
+          {item.icon}
+          <span>{item.label}</span>
+        </Link>
+      );
+    })}
+  </div>
 
-          {/* =================================================
-              Overview
-          ================================================== */}
+  {/* Role-specific */}
+  <div className="mt-6">
+    <p
+      className="
+        mb-2
+        px-3
+        text-[10px]
+        font-semibold
+        uppercase
+        tracking-wider
+        text-white/50
+      "
+    >
+      {roleTitle}
+    </p>
 
-          <div className="mb-6">
+    <div className="space-y-1">
+      {roleItems.map((item) => {
+        const active =
+          pathname === item.href ||
+          pathname.startsWith(
+            `${item.href}/`,
+          );
 
-            <p
-              className="
-                mb-2
-                px-3
-                text-[11px]
-                font-semibold
-                uppercase
-                tracking-wider
-                text-blue-100/70
-              "
-            >
-              Overview
-            </p>
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onClose}
+            className={`
+              flex
+              items-center
+              gap-3
+              rounded-xl
+              px-3
+              py-2.5
+              text-sm
+              font-medium
+              transition
+              ${
+                active
+                  ? 'bg-white text-[#1671B9] shadow-sm'
+                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+              }
+            `}
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </Link>
+        );
+      })}
+    </div>
+  </div>
 
-            <div className="space-y-1">
+</nav>
 
-              {commonItems
-                .slice(0, 1)
-                .map((item) => (
-                  <SidebarLink
-                    key={item.href}
-                    item={item}
-                    pathname={pathname}
-                    onClose={onClose}
-                  />
-                ))}
-
-            </div>
-
-          </div>
-
-          {/* =================================================
-              Role Menu
-          ================================================== */}
-
-          {roleItems.length > 0 && (
-            <div className="mb-6">
-
-              <p
-                className="
-                  mb-2
-                  px-3
-                  text-[11px]
-                  font-semibold
-                  uppercase
-                  tracking-wider
-                  text-blue-100/70
-                "
-              >
-                {user.role === 'JOB_SEEKER'
-                  ? 'Job Seeker'
-                  : user.role === 'COMPANY'
-                    ? 'Company'
-                    : 'Administration'}
-              </p>
-
-              <div className="space-y-1">
-
-                {roleItems.map((item) => (
-                  <SidebarLink
-                    key={item.href}
-                    item={item}
-                    pathname={pathname}
-                    onClose={onClose}
-                  />
-                ))}
-
-              </div>
-
-            </div>
-          )}
-
-          {/* =================================================
-              General
-          ================================================== */}
-
-          <div>
-
-            <p
-              className="
-                mb-2
-                px-3
-                text-[11px]
-                font-semibold
-                uppercase
-                tracking-wider
-                text-blue-100/70
-              "
-            >
-              General
-            </p>
-
-            <div className="space-y-1">
-
-              {commonItems
-                .slice(1)
-                .map((item) => (
-                  <SidebarLink
-                    key={item.href}
-                    item={item}
-                    pathname={pathname}
-                    onClose={onClose}
-                  />
-                ))}
-
-            </div>
-
-          </div>
-
-        </nav>
-
-        {/* ===================================================
-            Logout
+        {/* ====================================================
+            LOGOUT
         ==================================================== */}
 
         <div
@@ -571,22 +603,51 @@ export default function Sidebar({
           >
             <LogOut size={19} />
 
-            <span>
-              Logout
-            </span>
+            <span>Logout</span>
           </button>
         </div>
-
       </aside>
     </>
   );
 }
 
-/*
-|--------------------------------------------------------------------------
-| Sidebar Link
-|--------------------------------------------------------------------------
-*/
+/* ============================================================
+   SIDEBAR SECTION
+============================================================ */
+
+function SidebarSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="mb-6">
+      <p
+        className="
+          mb-2
+          px-3
+          text-[11px]
+          font-semibold
+          uppercase
+          tracking-wider
+          text-blue-100/70
+        "
+      >
+        {title}
+      </p>
+
+      <div className="space-y-1">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   SIDEBAR LINK
+============================================================ */
 
 function SidebarLink({
   item,
@@ -599,10 +660,8 @@ function SidebarLink({
 }) {
   const isActive =
     pathname === item.href ||
-    (
-      item.href !== '/dashboard' &&
-      pathname.startsWith(`${item.href}/`)
-    );
+    (item.href !== '/dashboard' &&
+      pathname.startsWith(`${item.href}/`));
 
   return (
     <Link
@@ -636,7 +695,6 @@ function SidebarLink({
         }
       `}
     >
-      {/* Icon */}
       <span
         className={`
           flex
@@ -657,10 +715,7 @@ function SidebarLink({
         {item.icon}
       </span>
 
-      {/* Label */}
-      <span>
-        {item.label}
-      </span>
+      <span>{item.label}</span>
     </Link>
   );
 }

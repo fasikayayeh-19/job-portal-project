@@ -1,6 +1,14 @@
+
+import DashboardToolbar from './DashboardToolbar';
+
 interface AdminDashboardProps {
   user: {
+    id: string;
     email: string;
+    role: 'ADMIN';
+
+    firstName?: string;
+    lastName?: string;
   };
 }
 
@@ -10,7 +18,17 @@ export default function AdminDashboard({
   return (
     <div className="space-y-6">
 
-      {/* Header */}
+      {/* =================================================
+          Dashboard Toolbar
+          Search + Notifications + Profile
+      ================================================== */}
+
+      <DashboardToolbar user={user} />
+
+      {/* =================================================
+          Dashboard Header
+      ================================================== */}
+
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
           Admin Dashboard
@@ -21,7 +39,10 @@ export default function AdminDashboard({
         </p>
       </div>
 
-      {/* Welcome */}
+      {/* =================================================
+          Welcome
+      ================================================== */}
+
       <section className="rounded-2xl bg-[#1671B9] p-6 text-white shadow-lg">
         <h2 className="text-2xl font-bold">
           Welcome, Administrator 👋
@@ -32,7 +53,10 @@ export default function AdminDashboard({
         </p>
       </section>
 
-      {/* Statistics */}
+      {/* =================================================
+          Statistics
+      ================================================== */}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
         <DashboardCard
@@ -69,7 +93,8 @@ function DashboardCard({
   value: string;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+
       <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
         {title}
       </p>
@@ -77,6 +102,7 @@ function DashboardCard({
       <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
         {value}
       </p>
+
     </div>
   );
 }
