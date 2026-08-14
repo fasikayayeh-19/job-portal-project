@@ -72,49 +72,57 @@ export class JobsService {
   }
 
   async findAll(query: JobQueryDto) {
-    const page = Number(query.page) || 1;
-    const limit = Number(query.limit) || 10;
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
 
-    const qb = this.jobRepository
-      .createQueryBuilder('job')
-      .leftJoinAndSelect('job.company', 'company');
+  const qb = this.jobRepository
+    .createQueryBuilder('job')
+    .leftJoinAndSelect('job.company', 'company')
+    .leftJoinAndSelect('job.category', 'category');
 
-    if (query.search) {
-      qb.andWhere('LOWER(job.title) LIKE LOWER(:search)', {
-        search: `%${query.search}%`,
-      });
-    }
+  // Only show jobs from approved companies
+  qb.andWhere('company.status = :companyStatus', {
+    companyStatus: CompanyStatus.APPROVED,
+  });
 
-    if (query.location) {
-      qb.andWhere('LOWER(job.location) LIKE LOWER(:location)', {
-        location: `%${query.location}%`,
-      });
-    }
+  // Don't show closed jobs
+  qb.andWhere('job.status != :jobStatus', {
+    jobStatus: JobStatus.CLOSED,
+  });
 
-    if (query.jobType) {
-      qb.andWhere('job.jobType = :jobType', {
-        jobType: query.jobType,
-      });
-    }
-
-    qb.skip((page - 1) * limit);
-
-    qb.take(limit);
-
-    const [jobs, total] = await qb.getManyAndCount();
-
-    return {
-      data: jobs,
-
-      total,
-
-      page,
-
-      limit,
-
-      totalPages: Math.ceil(total / limit),
-    };
+  if (query.search) {
+    qb.andWhere('LOWER(job.title) LIKE LOWER(:search)', {
+      search: `%${query.search}%`,
+    });
   }
+
+  if (query.location) {
+    qb.andWhere('LOWER(job.location) LIKE LOWER(:location)', {
+      location: `%${query.location}%`,
+    });
+  }
+
+  if (query.jobType) {
+    qb.andWhere('job.jobType = :jobType', {
+      jobType: query.jobType,
+    });
+  }
+
+  qb.orderBy('job.createdAt', 'DESC');
+
+  qb.skip((page - 1) * limit);
+  qb.take(limit);
+
+  const [jobs, total] = await qb.getManyAndCount();
+
+  return {
+    data: jobs,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
+}
 
   async findOne(id: string) {
     const job = await this.jobRepository.findOne({

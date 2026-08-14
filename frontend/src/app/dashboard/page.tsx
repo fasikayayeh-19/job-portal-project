@@ -101,7 +101,7 @@ if (storedUser) {
 
       {/* Job Seeker */}
       {user.role === 'JOB_SEEKER' && (
-        <JobSeekerDashboard user={user} />
+        <JobSeekerDashboard />
       )}
 
       {/* Company */}

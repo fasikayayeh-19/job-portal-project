@@ -3,7 +3,7 @@ import ProfileImageUpload from '@/components/profile/ProfileImageUpload';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-
+import ResumeUpload from '@/components/profile/ResumeUpload';
 import {
   User as UserIcon,
   Mail,
@@ -28,7 +28,11 @@ interface UserProfile {
 
   phone?: string;
   location?: string;
+
   professionalTitle?: string;
+  skills?: string;
+  experience?: string;
+  education?: string;
   bio?: string;
 
   profileImageUrl?: string;
@@ -45,6 +49,12 @@ interface ProfileForm {
   firstName: string;
   lastName: string;
   location: string;
+  phone: string;
+  professionalTitle: string;
+  skills: string;
+  experience: string;
+  education: string;
+  bio: string;
 }
 
 export default function JobSeekerProfilePage() {
@@ -56,6 +66,12 @@ export default function JobSeekerProfilePage() {
     firstName: '',
     lastName: '',
     location: '',
+    phone:'',
+    professionalTitle:'',
+    bio:'',
+    education:'',
+    experience:'',
+    skills:'',
   });
 
   const [loading, setLoading] = useState(true);
@@ -92,11 +108,17 @@ export default function JobSeekerProfilePage() {
         if (mounted) {
           setUser(cachedUser);
 
-          setForm({
-            firstName: cachedUser.firstName ?? '',
-            lastName: cachedUser.lastName ?? '',
-            location: cachedUser.location ?? '',
-          });
+        setForm({
+  firstName: cachedUser.firstName ?? '',
+  lastName: cachedUser.lastName ?? '',
+  location: cachedUser.location ?? '',
+  phone: cachedUser.phone ?? '',
+  professionalTitle: cachedUser.professionalTitle ?? '',
+  skills: cachedUser.skills ?? '',
+  experience: cachedUser.experience ?? '',
+  education: cachedUser.education ?? '',
+  bio: cachedUser.bio ?? '',
+});
 
           // Show page immediately
           setLoading(false);
@@ -124,10 +146,16 @@ export default function JobSeekerProfilePage() {
       setUser(profile);
 
       setForm({
-        firstName: profile.firstName ?? '',
-        lastName: profile.lastName ?? '',
-        location: profile.location ?? '',
-      });
+  firstName: profile.firstName ?? '',
+  lastName: profile.lastName ?? '',
+  location: profile.location ?? '',
+  phone: profile.phone ?? '',
+  professionalTitle: profile.professionalTitle ?? '',
+  skills: profile.skills ?? '',
+  experience: profile.experience ?? '',
+  education: profile.education ?? '',
+  bio: profile.bio ?? '',
+});
 
       // ============================================
       // 3. Update localStorage
@@ -248,6 +276,13 @@ export default function JobSeekerProfilePage() {
       firstName: updatedUser.firstName ?? '',
       lastName: updatedUser.lastName ?? '',
       location: updatedUser.location ?? '',
+      phone: updatedUser.firstName ?? '',
+        professionalTitle: updatedUser.lastName ?? '',
+        bio: updatedUser.location ?? '',
+        education:updatedUser.education ?? '',
+        experience:updatedUser.experience ??'',
+        skills:updatedUser.skills ??'',
+
     });
 
     // ============================================
@@ -599,7 +634,112 @@ if (storedUser) {
             </button>
           </div>
         </section>
-      </form>
+
+
+       {/* Resume */}
+
+<section className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+
+  <div className="border-b border-slate-200 px-6 py-5 dark:border-slate-800">
+
+    <h2 className="font-semibold text-slate-900 dark:text-white">
+      Resume
+    </h2>
+
+    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+      Upload your latest resume for employers to review.
+    </p>
+
+  </div>
+
+  <div className="p-6">
+
+    <ResumeUpload
+      resumeUrl={user.resumeUrl}
+      resumeFileName={user.resumeFileName}
+      onUploaded={(url, fileName) => {
+        setUser((previous) =>
+          previous
+            ? {
+                ...previous,
+                resumeUrl: url,
+                resumeFileName: fileName,
+              }
+            : previous,
+        );
+
+        const storedUser =
+          localStorage.getItem('user');
+
+        if (storedUser) {
+          try {
+            const currentUser =
+              JSON.parse(storedUser);
+
+            localStorage.setItem(
+              'user',
+              JSON.stringify({
+                ...currentUser,
+                resumeUrl: url,
+                resumeFileName: fileName,
+              }),
+            );
+
+            window.dispatchEvent(
+              new Event('userUpdated'),
+            );
+          } catch (error) {
+            console.error(
+              'Failed to update stored user:',
+              error,
+            );
+          }
+        }
+      }}
+      onDeleted={() => {
+        setUser((previous) =>
+          previous
+            ? {
+                ...previous,
+                resumeUrl: undefined,
+                resumeFileName: undefined,
+              }
+            : previous,
+        );
+
+        const storedUser =
+          localStorage.getItem('user');
+
+        if (storedUser) {
+          try {
+            const currentUser =
+              JSON.parse(storedUser);
+
+            localStorage.setItem(
+              'user',
+              JSON.stringify({
+                ...currentUser,
+                resumeUrl: undefined,
+                resumeFileName: undefined,
+              }),
+            );
+
+            window.dispatchEvent(
+              new Event('userUpdated'),
+            );
+          } catch (error) {
+            console.error(
+              'Failed to update stored user:',
+              error,
+            );
+          }
+        }
+      }}
+    />
+
+  </div>
+</section> 
+    
 
       {/* Professional Information */}
 
@@ -622,24 +762,180 @@ if (storedUser) {
           </div>
         </div>
 
-        <div className="grid gap-4 p-6 sm:grid-cols-3">
-          <ProfilePlaceholder
-            title="Skills"
-            description="Add your skills"
-          />
+        <div className="grid gap-5 p-6 sm:grid-cols-2">
 
-          <ProfilePlaceholder
-            title="Experience"
-            description="Add your work experience"
-          />
+  {/* Professional Title */}
+  <div>
+    <label
+      htmlFor="professionalTitle"
+      className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+    >
+      Professional Title
+    </label>
 
-          <ProfilePlaceholder
-            title="Education"
-            description="Add your education"
-          />
-        </div>
-      </section>
+    <div className="relative">
+      <Briefcase
+        size={18}
+        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+      />
+
+      <input
+        id="professionalTitle"
+        name="professionalTitle"
+        type="text"
+        value={form.professionalTitle}
+        onChange={handleChange}
+        placeholder="e.g. Frontend Developer"
+        className="h-11 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-[#1671B9] focus:ring-2 focus:ring-[#1671B9]/10 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+      />
     </div>
+  </div>
+
+  {/* Phone */}
+  <div>
+    <label
+      htmlFor="phone"
+      className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+    >
+      Phone
+    </label>
+
+    <input
+      id="phone"
+      name="phone"
+      type="tel"
+      value={form.phone}
+      onChange={handleChange}
+      placeholder="e.g. +251 912 345 678"
+      className="h-11 w-full rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-[#1671B9] focus:ring-2 focus:ring-[#1671B9]/10 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+    />
+  </div>
+
+  {/* Skills */}
+  <div className="sm:col-span-2">
+    <label
+      htmlFor="skills"
+      className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+    >
+      Skills
+    </label>
+
+    <input
+      id="skills"
+      name="skills"
+      type="text"
+      value={form.skills}
+      onChange={handleChange}
+      placeholder="e.g. React, TypeScript, NestJS, PostgreSQL"
+      className="h-11 w-full rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-[#1671B9] focus:ring-2 focus:ring-[#1671B9]/10 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+    />
+
+    <p className="mt-1.5 text-xs text-slate-400">
+      Separate multiple skills with commas.
+    </p>
+  </div>
+
+  {/* Experience */}
+  <div>
+    <label
+      htmlFor="experience"
+      className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+    >
+      Experience
+    </label>
+
+    <textarea
+      id="experience"
+      name="experience"
+      value={form.experience}
+      onChange={(e) =>
+        setForm((previous) => ({
+          ...previous,
+          experience: e.target.value,
+        }))
+      }
+      rows={5}
+      placeholder="Describe your work experience..."
+      className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#1671B9] focus:ring-2 focus:ring-[#1671B9]/10 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+    />
+  </div>
+
+  {/* Education */}
+  <div>
+    <label
+      htmlFor="education"
+      className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+    >
+      Education
+    </label>
+
+    <textarea
+      id="education"
+      name="education"
+      value={form.education}
+      onChange={(e) =>
+        setForm((previous) => ({
+          ...previous,
+          education: e.target.value,
+        }))
+      }
+      rows={5}
+      placeholder="e.g. BSc Computer Science - Addis Ababa University"
+      className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#1671B9] focus:ring-2 focus:ring-[#1671B9]/10 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+    />
+  </div>
+
+  {/* Bio */}
+  <div className="sm:col-span-2">
+    <label
+      htmlFor="bio"
+      className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+    >
+      About Me
+    </label>
+
+    <textarea
+      id="bio"
+      name="bio"
+      value={form.bio}
+      onChange={(e) =>
+        setForm((previous) => ({
+          ...previous,
+          bio: e.target.value,
+        }))
+      }
+      rows={5}
+      placeholder="Write a short professional introduction about yourself..."
+      className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#1671B9] focus:ring-2 focus:ring-[#1671B9]/10 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+    />
+  </div>
+
+</div>
+
+<div className="flex justify-end border-t border-slate-200 px-6 py-4 dark:border-slate-800">
+  <button
+    type="submit"
+    disabled={saving}
+    className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1671B9] px-5 text-sm font-semibold text-white transition hover:bg-[#0F5F9E] disabled:cursor-not-allowed disabled:opacity-60"
+  >
+    {saving ? (
+      <>
+        <Loader2 size={17} className="animate-spin" />
+        Saving...
+      </>
+    ) : (
+      <>
+        <Save size={17} />
+        Save Professional Information
+      </>
+    )}
+  </button>
+</div>
+      </section>
+      </form>
+    </div>
+
+    
   );
 }
 

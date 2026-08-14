@@ -10,6 +10,7 @@ import {
   UseGuards,
   UseInterceptors,
   Request,
+  BadRequestException,
 } from '@nestjs/common';
 
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -36,7 +37,49 @@ export class UsersController {
   // =====================================================
   // GET PROFILE
   // =====================================================
+// =====================================================
+// UPLOAD RESUME
+// =====================================================
 
+@Post('resume')
+@UseGuards(JwtAuthGuard)
+@UseInterceptors(
+  FileInterceptor('file', {
+    dest: './uploads/resumes',
+
+    limits: {
+      fileSize: 5 * 1024 * 1024,
+    },
+
+    fileFilter: (req, file, callback) => {
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ];
+
+      if (!allowedTypes.includes(file.mimetype)) {
+        return callback(
+          new BadRequestException(
+            'Only PDF, DOC, and DOCX files are allowed',
+          ),
+          false,
+        );
+      }
+
+      callback(null, true);
+    },
+  }),
+)
+uploadResume(
+  @CurrentUser() user: any,
+  @UploadedFile() file: Express.Multer.File,
+) {
+  return this.usersService.uploadResume(
+    user.id,
+    file,
+  );
+}
   
   
   
@@ -68,42 +111,44 @@ export class UsersController {
   // =====================================================
 
   @Post('profile-image')
-  @UseGuards(JwtAuthGuard)
-  @UseInterceptors(
-    FileInterceptor('file', {
-      dest: './uploads/profile-images',
-      limits: {
-        fileSize: 5 * 1024 * 1024,
-      },
-      fileFilter: (
-        req,
-        file,
-        callback,
-      ) => {
-        if (
-          !file.mimetype.startsWith('image/')
-        ) {
-          return callback(
-            new Error(
-              'Only image files are allowed',
-            ),
-            false,
-          );
-        }
+@UseGuards(JwtAuthGuard)
+@UseInterceptors(
+  FileInterceptor('file', {
+    dest: './uploads/profile-images',
 
-        callback(null, true);
-      },
-    }),
-  )
-  uploadProfileImage(
-    @CurrentUser() user: any,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    return this.usersService.updateProfileImage(
-      user.id,
-      file,
-    );
-  }
+    limits: {
+      fileSize: 5 * 1024 * 1024,
+    },
+
+    fileFilter: (req, file, callback) => {
+      const allowedTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+      ];
+
+      if (!allowedTypes.includes(file.mimetype)) {
+        return callback(
+          new BadRequestException(
+            'Only JPG, PNG, and WebP images are allowed',
+          ),
+          false,
+        );
+      }
+
+      callback(null, true);
+    },
+  }),
+)
+uploadProfileImage(
+  @CurrentUser() user: any,
+  @UploadedFile() file: Express.Multer.File,
+) {
+  return this.usersService.updateProfileImage(
+    user.id,
+    file,
+  );
+}
 
   // =====================================================
   // ADMIN TEST

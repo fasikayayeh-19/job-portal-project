@@ -1,4 +1,11 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { User } from '../users/entities/user.entity';
 
 import { CompaniesService } from './companies.service';
 
@@ -14,20 +21,54 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('companies')
 export class CompaniesController {
-  constructor(private companiesService: CompaniesService) {}
+  constructor(
+    private readonly companiesService: CompaniesService,
+  ) {}
 
- @Post()
-@UseGuards(JwtAuthGuard,RolesGuard)
+
+  @Get('dashboard')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('COMPANY')
-createCompany(
-  @Body() dto: CreateCompanyDto,
-  @CurrentUser() user:any,
+getDashboard(
+  @CurrentUser() user: User,
 ) {
-
- return this.companiesService.create(
-   dto,
-   user,
- );
-
+  return this.companiesService.getDashboard(
+    user.id,
+  );
 }
+
+  // =====================================================
+  // CREATE COMPANY
+  // =====================================================
+
+  @Post()
+  @UseGuards(
+    JwtAuthGuard,
+    RolesGuard,
+  )
+  @Roles('COMPANY')
+  createCompany(
+    @Body() dto: CreateCompanyDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.companiesService.create(
+      dto,
+      user,
+    );
+  }
+
+  // =====================================================
+  // GET MY COMPANY PROFILE
+  // =====================================================
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  getMyCompany(
+    @CurrentUser() user: any,
+  ) {
+    return this.companiesService.getMyCompany(
+      user.id,
+    );
+  }
+  
 }

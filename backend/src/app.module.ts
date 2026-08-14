@@ -13,6 +13,8 @@ import { AdminModule } from './admin/admin.module';
 import { JobsModule } from './jobs/jobs.module';
 import { CategoriesModule } from './categories/categories.module';
 import { SavedJobsModule } from './saved-jobs/saved-jobs.module';
+import { JobSeekerModule } from './job-seeker/job-seeker.module';
+import { CompanyDashboardModule } from './company-dashboard/company-dashboard.module';
 
 @Module({
   imports: [
@@ -87,6 +89,10 @@ import { SavedJobsModule } from './saved-jobs/saved-jobs.module';
     CategoriesModule,
 
     SavedJobsModule,
+
+    JobSeekerModule,
+
+    CompanyDashboardModule,
   ],
 
   providers: [

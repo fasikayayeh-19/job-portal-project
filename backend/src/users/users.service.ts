@@ -2,22 +2,16 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import {
   UnauthorizedException,
 } from '@nestjs/common';
 
 import * as bcrypt from 'bcrypt';
 
 import { InjectRepository } from '@nestjs/typeorm';
-
 import { Repository } from 'typeorm';
-
-import { User } from './entities/user.entity';
-
-import { UpdateProfileDto } from './dto/update-profile.dto';
-
 import { Multer } from 'multer';
+import { User } from './entities/user.entity';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 @Injectable()
 export class UsersService {
   constructor(
@@ -75,27 +69,92 @@ export class UsersService {
     const updatedUser =
       await this.usersRepository.save(user);
 
-    return {
-      message: 'Profile updated successfully',
+   return {
+  message: 'Profile updated successfully',
 
-      user: {
-        id: updatedUser.id,
-        email: updatedUser.email,
-        role: updatedUser.role,
-        firstName: updatedUser.firstName,
-        lastName: updatedUser.lastName,
-        phone: updatedUser.phone,
-        location: updatedUser.location,
-        profileImageUrl:
-          updatedUser.profileImageUrl,
-      },
-    };
+  user: {
+    id: updatedUser.id,
+    email: updatedUser.email,
+    role: updatedUser.role,
+
+    firstName: updatedUser.firstName,
+    lastName: updatedUser.lastName,
+    phone: updatedUser.phone,
+    location: updatedUser.location,
+
+    professionalTitle: updatedUser.professionalTitle,
+    skills: updatedUser.skills,
+    experience: updatedUser.experience,
+    education: updatedUser.education,
+    bio: updatedUser.bio,
+
+    profileImageUrl: updatedUser.profileImageUrl,
+  },
+};
   }
 
   // =====================================================
   // UPDATE PROFILE IMAGE
   // =====================================================
+  async uploadResume(
+  userId: string,
+  file: Express.Multer.File,
+) {
+  if (!file) {
+    throw new BadRequestException(
+      'Resume file is required',
+    );
+  }
 
+  const user = await this.usersRepository.findOne({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new NotFoundException(
+      'User not found',
+    );
+  }
+
+  user.resumeUrl =
+    `/uploads/resumes/${file.filename}`;
+
+  user.resumeFileName =
+    file.originalname;
+
+  const updatedUser =
+    await this.usersRepository.save(user);
+
+  return {
+    message: 'Resume uploaded successfully',
+
+    resumeUrl: updatedUser.resumeUrl,
+
+    resumeFileName:
+      updatedUser.resumeFileName,
+  };
+}
+
+async deleteResume(userId: string) {
+  const user = await this.usersRepository.findOne({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new NotFoundException(
+      'User not found',
+    );
+  }
+
+  user.resumeUrl = undefined;
+  user.resumeFileName = undefined;
+
+  await this.usersRepository.save(user);
+
+  return {
+    message: 'Resume deleted successfully',
+  };
+}
   async updateProfileImage(
     userId: string,
     file: Express.Multer.File,

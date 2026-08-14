@@ -151,4 +151,26 @@ export class ApplicationsService {
 
     return this.applicationRepository.save(application);
   }
+
+
+  async getMyApplications(user: any) {
+  return this.applicationRepository.find({
+    where: {
+      seeker: {
+        id: user.id,
+      },
+    },
+
+    relations: {
+      job: {
+        company: true,
+        category: true,
+      },
+    },
+
+    order: {
+      createdAt: 'DESC',
+    },
+  });
+}
 }

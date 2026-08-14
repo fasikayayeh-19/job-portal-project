@@ -11,5 +11,29 @@ export class UpdateProfileDto {
 
   @IsOptional()
   @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
   location?: string;
+
+  @IsOptional()
+  @IsString()
+  professionalTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  skills?: string;
+
+  @IsOptional()
+  @IsString()
+  experience?: string;
+
+  @IsOptional()
+  @IsString()
+  education?: string;
+
+  @IsOptional()
+  @IsString()
+  bio?: string;
 }

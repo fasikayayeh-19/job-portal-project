@@ -314,8 +314,30 @@ const response = await api.post(
                     </p>
                   )}
                 </div>
+ <div>
+  <label
+    htmlFor="location"
+    className="mb-2 block text-sm font-medium text-slate-700 dark:text-white"
+  >
+    Location
+  </label>
 
+  <input
+    id="location"
+    type="text"
+    placeholder="Addis Ababa, Ethiopia"
+    {...register('location')}
+    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#1671B9] focus:ring-2 focus:ring-[#1671B9]/20 dark:border-[#334155] dark:bg-[#1e293b] dark:text-white dark:placeholder:text-[#64748b]"
+  />
+
+  {errors.location && (
+    <p className="mt-1 text-sm text-red-500">
+      {errors.location.message}
+    </p>
+  )}
+</div>
               </div>
+              
             )}
 
             {/* COMPANY */}

@@ -58,8 +58,17 @@ export class User {
   @Column({ nullable: true })
   professionalTitle?: string;
 
-  @Column({ type: 'text', nullable: true })
-  bio?: string;
+@Column({ type: 'text', nullable: true })
+skills?: string;
+
+@Column({ type: 'text', nullable: true })
+experience?: string;
+
+@Column({ type: 'text', nullable: true })
+education?: string;
+
+@Column({ type: 'text', nullable: true })
+bio?: string;
 
   // =====================================================
   // PROFILE IMAGE

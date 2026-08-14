@@ -22,6 +22,7 @@ import {
   Plus,
   ShieldCheck,
   BarChart3,
+  UserCircle,
 } from 'lucide-react';
 
 type UserRole = 'JOB_SEEKER' | 'COMPANY' | 'ADMIN';
@@ -129,23 +130,28 @@ export default function Sidebar({
      JOB SEEKER
   ========================================================== */
 
-  const jobSeekerItems: MenuItem[] = [
-    {
-      label: 'Find Jobs',
-      href: '/jobs',
-      icon: <Search size={19} />,
-    },
-    {
-      label: 'My Applications',
-      href: '/dashboard/applications',
-      icon: <FileText size={19} />,
-    },
-    {
-      label: 'Saved Jobs',
-      href: '/dashboard/saved-jobs',
-      icon: <Bookmark size={19} />,
-    },
-  ];
+const jobSeekerItems: MenuItem[] = [
+  {
+    label: 'Find Jobs',
+    href: '/jobs',
+    icon: <Search size={19} />,
+  },
+  {
+    label: 'My Applications',
+    href: '/dashboard/applications',
+    icon: <FileText size={19} />,
+  },
+  {
+    label: 'Saved Jobs',
+    href: '/dashboard/saved-jobs',
+    icon: <Bookmark size={19} />,
+  },
+  {
+    label: 'My Profile',
+    href: '/dashboard/profile',
+    icon: <UserCircle size={19} />,
+  },
+];
 
   /* ==========================================================
      COMPANY

@@ -78,4 +78,13 @@ return this.applicationsService.updateStatus(
 
 }
 
+@Get('my-applications')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('JOB_SEEKER')
+getMyApplications(
+  @CurrentUser() user: any,
+) {
+  return this.applicationsService.getMyApplications(user);
+}
+
 }
