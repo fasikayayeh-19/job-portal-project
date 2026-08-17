@@ -1,58 +1,54 @@
 import api from '@/lib/axios';
+import type { CompanyDashboardData } from '@/components/dashboard/CompanyDashboard';
 
-export interface CompanyDashboardData {
-  company: {
-    id: string;
-    companyName: string;
+
+
+export const getCompanyDashboard =
+  async (): Promise<CompanyDashboardData> => {
+    const response = await api.get(
+      '/company-dashboard',
+    );
+
+    return response.data;
   };
+  export interface CompanyProfile {
+  id: string;
+  companyName: string;
+  description: string | null;
+  website: string | null;
+  logo: string | null;
+  location: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
 
-  stats: {
-    totalJobs: number;
-    activeJobs: number;
-    applications: number;
-    shortlisted: number;
-    hired: number;
-  };
-
-  applicationStatus: {
-    pendingReview: number;
-    onTest: number;
-    interview: number;
-    hired: number;
-    declined: number;
-  };
-
-  recentApplications: {
+  user: {
     id: string;
-    status: string;
-    createdAt: string;
-
-    job: {
-      id: string;
-      title: string;
-    };
-
-    seeker: {
-      id: string;
-      firstName?: string;
-      lastName?: string;
-      email: string;
-      profileImageUrl?: string;
-    };
-  }[];
-
-  recentJobs: {
-    id: string;
-    title: string;
-    status: string;
-    createdAt: string;
-    applications: number;
-  }[];
+    email: string;
+  };
 }
 
-export async function getCompanyDashboard(): Promise<CompanyDashboardData> {
-  const response = await api.get<CompanyDashboardData>(
-    '/company-dashboard',
+export interface UpdateCompanyData {
+  companyName?: string;
+  description?: string;
+  website?: string;
+  logo?: string;
+  location?: string;
+}
+export async function getMyCompany(): Promise<CompanyProfile> {
+  const response = await api.get<CompanyProfile>(
+    '/companies/profile',
+  );
+
+  return response.data;
+}
+
+export async function updateMyCompany(
+  data: UpdateCompanyData,
+): Promise<CompanyProfile> {
+  const response = await api.patch<CompanyProfile>(
+    '/companies/profile',
+    data,
   );
 
   return response.data;

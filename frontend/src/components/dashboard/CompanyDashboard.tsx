@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import DashboardToolbar from './DashboardToolbar';
+import DashboardToolbar from "./DashboardToolbar";
 import {
   BriefcaseBusiness,
   Users,
@@ -8,14 +8,14 @@ import {
   FileText,
   UserPlus,
   TrendingUp,
-} from 'lucide-react';
-import CompanyApplicationChart from '@/components/dashboard/CompanyApplicationChart';
-import { useCompanyDashboard } from '@/hooks/useCompanyDashboard';
+} from "lucide-react";
+import CompanyApplicationChart from "@/components/dashboard/CompanyApplicationChart";
+import { useCompanyDashboard } from "@/hooks/useCompanyDashboard";
 interface CompanyDashboardProps {
   user: {
     id: string;
     email: string;
-    role: 'COMPANY';
+    role: "COMPANY";
 
     firstName?: string;
     lastName?: string;
@@ -26,24 +26,51 @@ interface CompanyDashboardProps {
   };
 }
 
-export default function CompanyDashboard({
-  user,
-}: CompanyDashboardProps) {
+export interface CompanyDashboardData {
+  company: {
+    id: string;
+    companyName: string;
+  };
 
-  const {
-    data,
-    isLoading,
-    isError,
-  } = useCompanyDashboard();
+  stats: {
+    totalJobs: number;
+    activeJobs: number;
+    applications: number;
+    shortlisted: number;
+    hired: number;
+  };
+
+  applicationStatus: {
+    pendingReview: number;
+    onTest: number;
+    interview: number;
+    hired: number;
+    declined: number;
+  };
+
+  applicationsOverTime: {
+    day: string;
+    value: number;
+  }[];
+
+  jobPerformance: {
+    id: string;
+    title: string;
+    applications: number;
+  }[];
+
+  recentApplications: any[];
+
+  recentJobs: any[];
+}
+
+export default function CompanyDashboard({ user }: CompanyDashboardProps) {
+  const { data, isLoading, isError } = useCompanyDashboard();
 
   const companyName =
-    data?.company?.companyName ||
-    user.company?.companyName ||
-    'Your Company';
+    data?.company?.companyName || user.company?.companyName || "Your Company";
 
-
-
-      if (isLoading) {
+  if (isLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <div className="text-sm text-slate-500">
@@ -65,95 +92,8 @@ export default function CompanyDashboard({
   // Later these will come from the backend
   // ============================================
 
-  const statistics = {
-    activeJobs: 12,
-    totalJobs: 18,
-    applications: 148,
-    newApplicants: 32,
-  };
-
-  const applicationStatus = [
-    {
-      label: 'Pending Review',
-      value: 45,
-    },
-    {
-      label: 'On Test',
-      value: 30,
-    },
-    {
-      label: 'Interview',
-      value: 25,
-    },
-    {
-      label: 'Hired',
-      value: 18,
-    },
-    {
-      label: 'Declined',
-      value: 30,
-    },
-  ];
-
-  const applicationsOverTime = [
-    { day: 'Mon', value: 18 },
-    { day: 'Tue', value: 25 },
-    { day: 'Wed', value: 20 },
-    { day: 'Thu', value: 32 },
-    { day: 'Fri', value: 28 },
-    { day: 'Sat', value: 35 },
-    { day: 'Sun', value: 42 },
-  ];
-
-  const jobPerformance = [
-    {
-      title: 'Frontend Developer',
-      applications: 45,
-    },
-    {
-      title: 'Backend Developer',
-      applications: 32,
-    },
-    {
-      title: 'UI/UX Designer',
-      applications: 24,
-    },
-    {
-      title: 'QA Engineer',
-      applications: 15,
-    },
-  ];
-
-  const recentApplicants = [
-    {
-      name: 'John Doe',
-      job: 'Frontend Developer',
-      status: 'INTERVIEW',
-      date: 'Aug 12, 2026',
-    },
-    {
-      name: 'Sarah Ahmed',
-      job: 'Backend Developer',
-      status: 'PENDING_REVIEW',
-      date: 'Aug 11, 2026',
-    },
-    {
-      name: 'Michael Brown',
-      job: 'UI/UX Designer',
-      status: 'ON_TEST',
-      date: 'Aug 10, 2026',
-    },
-    {
-      name: 'Emily Wilson',
-      job: 'Frontend Developer',
-      status: 'HIRED',
-      date: 'Aug 09, 2026',
-    },
-  ];
-
   return (
     <div className="space-y-6">
-
       {/* =================================================
           Dashboard Toolbar
       ================================================== */}
@@ -179,9 +119,7 @@ export default function CompanyDashboard({
       ================================================== */}
 
       <section className="rounded-2xl bg-[#1671B9] p-6 text-white shadow-lg">
-        <h2 className="text-2xl font-bold">
-          Welcome, {companyName} 👋
-        </h2>
+        <h2 className="text-2xl font-bold">Welcome, {companyName} 👋</h2>
 
         <p className="mt-2 text-blue-100">
           Manage your recruitment activities from here.
@@ -193,74 +131,105 @@ export default function CompanyDashboard({
       ================================================== */}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-<DashboardCard
-  title="Active Jobs"
-  value={String(data?.stats.activeJobs ?? 0)}
-  icon={<BriefcaseBusiness size={20} />}
-/>
+        <DashboardCard
+          title="Active Jobs"
+          value={String(data?.stats.activeJobs ?? 0)}
+          icon={<BriefcaseBusiness size={20} />}
+        />
 
-<DashboardCard
-  title="Applications"
-  value={String(data?.stats.applications ?? 0)}
-  icon={<FileText size={20} />}
-/>
+        <DashboardCard
+          title="Applications"
+          value={String(data?.stats.applications ?? 0)}
+          icon={<FileText size={20} />}
+        />
 
-<DashboardCard
-  title="Shortlisted"
-  value={String(data?.stats.shortlisted ?? 0)}
-  icon={<UserCheck size={20} />}
-/>
+        <DashboardCard
+          title="Shortlisted"
+          value={String(data?.stats.shortlisted ?? 0)}
+          icon={<UserCheck size={20} />}
+        />
 
-<DashboardCard
-  title="Hired"
-  value={String(data?.stats.hired ?? 0)}
-  icon={<UserPlus size={20} />}
-/>
+        <DashboardCard
+          title="Hired"
+          value={String(data?.stats.hired ?? 0)}
+          icon={<UserPlus size={20} />}
+        />
 
-<div className="grid gap-6 lg:grid-cols-2">
-  <CompanyApplicationChart
-    data={data?.applicationStatus}
-  />
-</div>
+        
 
-      </div>
+         </div>
 
       {/* =================================================
           Charts
       ================================================== */}
 
       <div className="grid gap-6 lg:grid-cols-2">
-
+        <div className="grid gap-12 lg:grid-cols-o">
+          <CompanyApplicationChart data={data?.applicationStatus} />
+        </div>
+         <ApplicationsChart data={data?.applicationsOverTime ?? []} />
+      
+        
         {/* Applications Over Time */}
 
-        <ApplicationsChart
-          data={applicationsOverTime}
-        />
+        {/* =================================================
+    Charts
+================================================= */}
 
-        {/* Application Status */}
-
-        <ApplicationStatusChart
-          data={applicationStatus}
-        />
-
+        {/* <ApplicationStatusChart
+    data={
+      data?.applicationStatus
+        ? [
+            {
+              label: 'Pending Review',
+              value: data.applicationStatus.pendingReview,
+            },
+            {
+              label: 'On Test',
+              value: data.applicationStatus.onTest,
+            },
+            {
+              label: 'Interview',
+              value: data.applicationStatus.interview,
+            },
+            {
+              label: 'Hired',
+              value: data.applicationStatus.hired,
+            },
+            {
+              label: 'Declined',
+              value: data.applicationStatus.declined,
+            },
+          ]
+        : []
+    } */}
+        {/* /> */}
       </div>
 
-      {/* =================================================
-          Job Performance
-      ================================================== */}
-
-      <JobPerformance
-        jobs={jobPerformance}
-      />
+      <JobPerformance jobs={data?.jobPerformance ?? []} />
 
       {/* =================================================
           Recent Applicants
       ================================================== */}
 
       <RecentApplicants
-        applicants={recentApplicants}
-      />
+        applicants={(data?.recentApplications ?? []).map((application) => ({
+          name:
+            `${application.seeker.firstName ?? ""} ${
+              application.seeker.lastName ?? ""
+            }`.trim() || "Unknown Applicant",
 
+          job: application.job.title,
+
+          status: application.status,
+
+          date: new Date(application.createdAt).toLocaleDateString("en-US", {
+            month: "short",
+            day: "2-digit",
+            year: "numeric",
+          }),
+        }))}
+      />
     </div>
   );
 }
@@ -309,15 +278,11 @@ function ApplicationsChart({
     value: number;
   }[];
 }) {
-  const maxValue = Math.max(
-    ...data.map((item) => item.value),
-  );
+  const maxValue = Math.max(...data.map((item) => item.value));
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-
       <div className="flex items-center justify-between">
-
         <div>
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
             Applications Over Time
@@ -328,51 +293,38 @@ function ApplicationsChart({
           </p>
         </div>
 
-        <TrendingUp
-          size={20}
-          className="text-[#1671B9]"
-        />
-
+        <TrendingUp size={20} className="text-[#1671B9]" />
       </div>
 
       <div className="mt-8 flex h-56 items-end gap-3 sm:gap-5">
-
         {data.map((item) => {
-
-          const height =
-            (item.value / maxValue) * 100;
+          const height = (item.value / maxValue) * 100;
 
           return (
             <div
               key={item.day}
               className="flex h-full flex-1 flex-col items-center justify-end gap-2"
             >
-
               <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 {item.value}
               </span>
 
               <div className="flex h-full w-full items-end">
-
                 <div
                   className="w-full rounded-t-lg bg-[#1671B9] transition-all hover:bg-[#0F5F9E]"
                   style={{
                     height: `${height}%`,
                   }}
                 />
-
               </div>
 
               <span className="text-xs text-slate-500 dark:text-slate-400">
                 {item.day}
               </span>
-
             </div>
           );
         })}
-
       </div>
-
     </section>
   );
 }
@@ -389,14 +341,10 @@ function ApplicationStatusChart({
     value: number;
   }[];
 }) {
-  const total = data.reduce(
-    (sum, item) => sum + item.value,
-    0,
-  );
+  const total = data.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-
       <div>
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
           Application Status
@@ -408,19 +356,16 @@ function ApplicationStatusChart({
       </div>
 
       <div className="mt-6 flex flex-col items-center gap-6 sm:flex-row">
-
         {/* Circle */}
 
         <div
           className="relative flex h-44 w-44 shrink-0 items-center justify-center rounded-full"
           style={{
             background:
-              'conic-gradient(#1671B9 0deg 110deg, #38A1DB 110deg 190deg, #7C3AED 190deg 250deg, #22C55E 250deg 295deg, #EF4444 295deg 360deg)',
+              "conic-gradient(#1671B9 0deg 110deg, #38A1DB 110deg 190deg, #7C3AED 190deg 250deg, #22C55E 250deg 295deg, #EF4444 295deg 360deg)",
           }}
         >
-
           <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full bg-white dark:bg-slate-900">
-
             <span className="text-2xl font-bold text-slate-900 dark:text-white">
               {total}
             </span>
@@ -428,21 +373,17 @@ function ApplicationStatusChart({
             <span className="text-xs text-slate-500 dark:text-slate-400">
               Applications
             </span>
-
           </div>
-
         </div>
 
         {/* Legend */}
 
         <div className="w-full space-y-3">
-
           {data.map((item) => (
             <div
               key={item.label}
               className="flex items-center justify-between text-sm"
             >
-
               <span className="text-slate-600 dark:text-slate-300">
                 {item.label}
               </span>
@@ -450,14 +391,10 @@ function ApplicationStatusChart({
               <span className="font-semibold text-slate-900 dark:text-white">
                 {item.value}
               </span>
-
             </div>
           ))}
-
         </div>
-
       </div>
-
     </section>
   );
 }
@@ -474,13 +411,10 @@ function JobPerformance({
     applications: number;
   }[];
 }) {
-  const maxApplications = Math.max(
-    ...jobs.map((job) => job.applications),
-  );
+  const maxApplications = Math.max(...jobs.map((job) => job.applications));
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-
       <div>
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
           Job Performance
@@ -492,19 +426,12 @@ function JobPerformance({
       </div>
 
       <div className="mt-6 space-y-5">
-
         {jobs.map((job) => {
-
-          const width =
-            (job.applications /
-              maxApplications) *
-            100;
+          const width = (job.applications / maxApplications) * 100;
 
           return (
             <div key={job.title}>
-
               <div className="mb-2 flex items-center justify-between">
-
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   {job.title}
                 </span>
@@ -512,26 +439,20 @@ function JobPerformance({
                 <span className="text-sm font-semibold text-slate-900 dark:text-white">
                   {job.applications}
                 </span>
-
               </div>
 
               <div className="h-2.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-
                 <div
                   className="h-full rounded-full bg-[#1671B9]"
                   style={{
                     width: `${width}%`,
                   }}
                 />
-
               </div>
-
             </div>
           );
         })}
-
       </div>
-
     </section>
   );
 }
@@ -552,9 +473,7 @@ function RecentApplicants({
 }) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-
       <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5 dark:border-slate-800">
-
         <div>
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
             Recent Applicants
@@ -571,28 +490,20 @@ function RecentApplicants({
         >
           View all
         </button>
-
       </div>
 
       <div className="divide-y divide-slate-200 dark:divide-slate-800">
-
         {applicants.map((applicant) => (
-
           <div
             key={`${applicant.name}-${applicant.date}`}
             className="flex flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:justify-between"
           >
-
             <div className="flex items-center gap-3">
-
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 font-semibold text-[#1671B9] dark:bg-blue-950/30">
-                {applicant.name
-                  .charAt(0)
-                  .toUpperCase()}
+                {applicant.name.charAt(0).toUpperCase()}
               </div>
 
               <div>
-
                 <h3 className="font-semibold text-slate-900 dark:text-white">
                   {applicant.name}
                 </h3>
@@ -600,29 +511,17 @@ function RecentApplicants({
                 <p className="text-sm text-slate-500 dark:text-slate-400">
                   {applicant.job}
                 </p>
-
               </div>
-
             </div>
 
             <div className="flex items-center gap-4">
+              <span className="text-xs text-slate-400">{applicant.date}</span>
 
-              <span className="text-xs text-slate-400">
-                {applicant.date}
-              </span>
-
-              <ApplicationStatus
-                status={applicant.status}
-              />
-
+              <ApplicationStatus status={applicant.status} />
             </div>
-
           </div>
-
         ))}
-
       </div>
-
     </section>
   );
 }
@@ -631,11 +530,7 @@ function RecentApplicants({
    APPLICATION STATUS BADGE
 ===================================================== */
 
-function ApplicationStatus({
-  status,
-}: {
-  status: string;
-}) {
+function ApplicationStatus({ status }: { status: string }) {
   const statusConfig: Record<
     string,
     {
@@ -644,42 +539,40 @@ function ApplicationStatus({
     }
   > = {
     PENDING_REVIEW: {
-      label: 'Pending Review',
+      label: "Pending Review",
       className:
-        'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+        "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
     },
 
     ON_TEST: {
-      label: 'On Test',
+      label: "On Test",
       className:
-        'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+        "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
     },
 
     INTERVIEW: {
-      label: 'Interview',
+      label: "Interview",
       className:
-        'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+        "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
     },
 
     HIRED: {
-      label: 'Hired',
+      label: "Hired",
       className:
-        'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+        "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
     },
 
     DECLINED: {
-      label: 'Declined',
-      className:
-        'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      label: "Declined",
+      className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
     },
   };
 
-  const config =
-    statusConfig[status] ?? {
-      label: status,
-      className:
-        'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-    };
+  const config = statusConfig[status] ?? {
+    label: status,
+    className:
+      "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  };
 
   return (
     <span

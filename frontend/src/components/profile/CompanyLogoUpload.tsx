@@ -14,23 +14,23 @@ import {
 
 import api from '@/lib/axios';
 
-interface ProfileImageUploadProps {
-  name: string;
-  imageUrl?: string | null;
+interface CompanyLogoUploadProps {
+  companyName: string;
+  logoUrl?: string | null;
   onUploaded?: (url: string) => void;
 }
 
-export default function ProfileImageUpload({
-  name,
-  imageUrl,
+export default function CompanyLogoUpload({
+  companyName,
+  logoUrl,
   onUploaded,
-}: ProfileImageUploadProps) {
+}: CompanyLogoUploadProps) {
   const inputRef =
     useRef<HTMLInputElement>(null);
 
   const [preview, setPreview] =
     useState<string | null>(
-      imageUrl || null,
+      logoUrl || null,
     );
 
   const [uploading, setUploading] =
@@ -39,36 +39,36 @@ export default function ProfileImageUpload({
   const [error, setError] =
     useState('');
 
-  const initial =
-    name?.charAt(0)?.toUpperCase() || 'C';
-
   const getImageUrl = (
     url?: string | null,
   ) => {
-    if (!url) {
-      return null;
-    }
+    if (!url) return null;
 
-    if (url.startsWith('http')) {
+    if (
+      url.startsWith('http://') ||
+      url.startsWith('https://')
+    ) {
       return url;
     }
 
     return `http://localhost:3000${url}`;
   };
 
-  const handleSelect = async (
+  const initial =
+    companyName
+      ?.charAt(0)
+      ?.toUpperCase() || 'C';
+
+  const handleUpload = async (
     event: ChangeEvent<HTMLInputElement>,
   ) => {
     const file =
       event.target.files?.[0];
 
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     setError('');
 
-    // Only images
     if (!file.type.startsWith('image/')) {
       setError(
         'Please select an image file.',
@@ -78,17 +78,15 @@ export default function ProfileImageUpload({
       return;
     }
 
-    // Maximum 5 MB
     if (file.size > 5 * 1024 * 1024) {
       setError(
-        'Image size must be less than 5 MB.',
+        'Logo must be smaller than 5 MB.',
       );
 
       event.target.value = '';
       return;
     }
 
-    // Local preview
     const localPreview =
       URL.createObjectURL(file);
 
@@ -117,15 +115,6 @@ export default function ProfileImageUpload({
           },
         );
 
-      /*
-       * Backend should return:
-       *
-       * {
-       *   id: "...",
-       *   logoUrl: "/uploads/company/....png"
-       * }
-       */
-
       const uploadedUrl =
         response.data?.logoUrl;
 
@@ -142,23 +131,19 @@ export default function ProfileImageUpload({
       onUploaded?.(
         uploadedUrl,
       );
-    } catch (error: any) {
+    } catch (err: any) {
       console.error(
-        'Logo upload failed:',
-        error,
+        'Company logo upload failed:',
+        err,
       );
 
       setError(
-        error.response?.data?.message ||
-          error.message ||
-          'Failed to upload logo.',
+        err.response?.data?.message ||
+          'Failed to upload company logo.',
       );
 
-      // Restore previous image
       setPreview(
-        imageUrl
-          ? getImageUrl(imageUrl)
-          : null,
+        getImageUrl(logoUrl),
       );
     } finally {
       setUploading(false);
@@ -179,11 +164,11 @@ export default function ProfileImageUpload({
           {preview ? (
             <img
               src={preview}
-              alt={`${name} logo`}
+              alt={`${companyName} logo`}
               className="h-full w-full object-contain p-2"
-              onError={() => {
-                setPreview(null);
-              }}
+              onError={() =>
+                setPreview(null)
+              }
             />
           ) : (
             <span className="text-3xl font-bold text-[#1671B9]">
@@ -193,7 +178,7 @@ export default function ProfileImageUpload({
 
         </div>
 
-        {/* Upload button */}
+        {/* Camera button */}
 
         <button
           type="button"
@@ -201,8 +186,8 @@ export default function ProfileImageUpload({
             inputRef.current?.click()
           }
           disabled={uploading}
-          aria-label="Upload company logo"
           className="absolute -bottom-2 -right-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#1671B9] text-white shadow-md transition hover:bg-[#0F5F9E] disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-900"
+          aria-label="Change company logo"
         >
           {uploading ? (
             <Loader2
@@ -216,13 +201,13 @@ export default function ProfileImageUpload({
 
       </div>
 
-      {/* Hidden input */}
+      {/* File input */}
 
       <input
         ref={inputRef}
         type="file"
         accept="image/png,image/jpeg,image/jpg,image/webp"
-        onChange={handleSelect}
+        onChange={handleUpload}
         className="hidden"
       />
 

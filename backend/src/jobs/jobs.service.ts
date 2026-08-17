@@ -144,89 +144,86 @@ export class JobsService {
   }
 
   async myJobs(user: any) {
-    const company = await this.companyRepository.findOne({
-      where: {
-        user: {
-          id: user.id,
-        },
+  const company = await this.companyRepository.findOne({
+    where: {
+      user: {
+        id: user.id,
       },
-    });
+    },
+  });
 
-    return this.jobRepository.find({
-      where: {
-        company: {
-          id: company!.id,
-        },
-      },
-
-      relations: {
-        category: true,
-      },
-    });
+  if (!company) {
+    throw new NotFoundException('Company profile not found');
   }
-  async update(
- id:string,
- dto:UpdateJobDto,
- user:any
-){
 
-const job = await this.jobRepository.findOne({
-  where: { id },
-  relations: {
-    company: {
-      user: true,
+  return this.jobRepository.find({
+    where: {
+      company: {
+        id: company.id,
+      },
     },
-  },
-});
 
-
-if(!job){
- throw new NotFoundException('Job not found');
-}
-
-
-if(job.company.user.id !== user.id){
- throw new ForbiddenException();
-}
-
-
-Object.assign(job,dto);
-
-
-return this.jobRepository.save(job);
-
-}
-async close(
- id:string,
- user:any
-){
-
-const job = await this.jobRepository.findOne({
-  where: { id },
-  relations: {
-    company: {
-      user: true,
+    relations: {
+      category: true,
+      applications: true,
     },
-  },
-});
 
-if(!job){
- throw new NotFoundException();
+    order: {
+      createdAt: 'DESC',
+    },
+  });
 }
+ async update(
+  id: string,
+  dto: UpdateJobDto,
+  user: any,
+) {
+  const job = await this.jobRepository.findOne({
+    where: { id },
+    relations: {
+      company: {
+        user: true,
+      },
+      category: true,
+    },
+  });
 
+  if (!job) {
+    throw new NotFoundException('Job not found');
+  }
 
-if(job.company.user.id !== user.id){
- throw new ForbiddenException();
+  // Make sure this job belongs to the logged-in company
+  if (job.company.user.id !== user.id) {
+    throw new ForbiddenException(
+      'You are not allowed to update this job',
+    );
+  }
+
+  // Update category if categoryId was provided
+  if (dto.categoryId) {
+    const category = await this.categoryRepository.findOne({
+      where: {
+        id: dto.categoryId,
+      },
+    });
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    job.category = category;
+  }
+
+  // Don't put categoryId directly into Job
+  const {
+    categoryId,
+    ...jobData
+  } = dto;
+
+  Object.assign(job, jobData);
+
+  return this.jobRepository.save(job);
 }
-
-
-job.status = JobStatus.CLOSED;
-
-
-return this.jobRepository.save(job);
-
-}
-
 async remove(
  id:string,
  user:any
@@ -254,6 +251,44 @@ if(job.company.user.id !== user.id){
 
 return this.jobRepository.remove(job);
 
+}
+
+async close(
+  id: string,
+  user: any,
+) {
+  const job = await this.jobRepository.findOne({
+    where: {
+      id,
+    },
+    relations: {
+      company: {
+        user: true,
+      },
+    },
+  });
+
+  if (!job) {
+    throw new NotFoundException(
+      'Job not found',
+    );
+  }
+
+  // Make sure the job belongs to the logged-in company
+  if (job.company.user.id !== user.id) {
+    throw new ForbiddenException(
+      'You are not allowed to close this job',
+    );
+  }
+
+  // Already closed
+  if (job.status === JobStatus.CLOSED) {
+    return job;
+  }
+
+  job.status = JobStatus.CLOSED;
+
+  return this.jobRepository.save(job);
 }
 
 }

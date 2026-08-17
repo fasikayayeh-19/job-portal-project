@@ -6,7 +6,7 @@ import {
  Req
 } from '@nestjs/common';
 
-
+import { UpdateApplicationNoteDto } from './dto/update-application-note.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -47,6 +47,32 @@ create(
     user
   );
 }
+@Get('company')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('COMPANY')
+getCompanyApplicants(
+  @CurrentUser() user: any,
+) {
+  return this.applicationsService.getCompanyApplicants(
+    user,
+  );
+}
+
+@Patch(':id/note')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('COMPANY')
+updateNote(
+  @Param('id') id: string,
+  @Body() dto: UpdateApplicationNoteDto,
+  @CurrentUser() user: any,
+) {
+  return this.applicationsService.updateNote(
+    id,
+    dto,
+    user,
+  );
+}
+
 @Get('job/:jobId')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('COMPANY')
@@ -86,5 +112,7 @@ getMyApplications(
 ) {
   return this.applicationsService.getMyApplications(user);
 }
+
+
 
 }

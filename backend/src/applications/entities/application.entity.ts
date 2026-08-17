@@ -37,7 +37,11 @@ export class Application {
     default:ApplicationStatus.PENDING_REVIEW
   })
   status!:ApplicationStatus;
-
+ @Column({
+  type: 'text',
+  nullable: true,
+})
+companyNote?: string;
 
 
   @ManyToOne(

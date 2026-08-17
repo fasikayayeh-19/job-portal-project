@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { UpdateApplicationStatusDto } from './dto/update-application-status.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-
+import { UpdateApplicationNoteDto } from './dto/update-application-note.dto';
 import { Repository } from 'typeorm';
 
 import { Application } from './entities/application.entity';
@@ -112,6 +112,49 @@ export class ApplicationsService {
     },
   });
 }
+
+async updateNote(
+  id: string,
+  dto: UpdateApplicationNoteDto,
+  user: any,
+) {
+  const application =
+    await this.applicationRepository.findOne({
+      where: {
+        id,
+      },
+
+      relations: {
+        job: {
+          company: {
+            user: true,
+          },
+        },
+      },
+    });
+
+  if (!application) {
+    throw new NotFoundException(
+      'Application not found',
+    );
+  }
+
+  // Make sure this company owns the job
+  if (
+    application.job.company.user.id !== user.id
+  ) {
+    throw new ForbiddenException(
+      'You cannot update this application',
+    );
+  }
+
+  application.companyNote = dto.note;
+
+  return this.applicationRepository.save(
+    application,
+  );
+}
+
   async updateStatus(id: string, dto: UpdateApplicationStatusDto, user: any) {
     const application = await this.applicationRepository.findOne({
       where: {
@@ -173,4 +216,69 @@ export class ApplicationsService {
     },
   });
 }
-}
+
+
+
+async getCompanyApplicants(user: any) {
+  const applications = await this.applicationRepository.find({
+    where: {
+      job: {
+        company: {
+          user: {
+            id: user.id,
+          },
+        },
+      },
+    },
+
+    relations: {
+      seeker: true,
+      job: {
+        category: true,
+      },
+    },
+
+    order: {
+      createdAt: 'DESC',
+    },
+  });
+
+ return applications.map((application) => ({
+  id: application.id,
+  coverLetter: application.coverLetter,
+  companyNote: application.companyNote,
+  status: application.status,
+  createdAt: application.createdAt,
+  updatedAt: application.updatedAt,
+
+  seeker: {
+    id: application.seeker.id,
+    firstName: application.seeker.firstName,
+    lastName: application.seeker.lastName,
+    email: application.seeker.email,
+    phone: application.seeker.phone,
+    professionalTitle: application.seeker.professionalTitle,
+    profileImageUrl: application.seeker.profileImageUrl,
+    resumeUrl: application.seeker.resumeUrl,
+    resumeFileName: application.seeker.resumeFileName,
+    skills: application.seeker.skills,
+    experience: application.seeker.experience,
+    education: application.seeker.education,
+    bio: application.seeker.bio,
+  },
+
+  job: {
+    id: application.job.id,
+    title: application.job.title,
+    location: application.job.location,
+    jobType: application.job.jobType,
+    category: application.job.category
+      ? {
+          id: application.job.category.id,
+          name: application.job.category.name,
+        }
+      : undefined,
+  },
+}));
+
+}}

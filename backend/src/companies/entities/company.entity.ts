@@ -1,3 +1,4 @@
+
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -9,81 +10,59 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { CompanyStatus } 
-from '../enums/company-status.enum';
+import { CompanyStatus } from '../enums/company-status.enum';
 import { User } from '../../users/entities/user.entity';
 import { Job } from '../../jobs/entities/job.entity';
 
-
 @Entity('companies')
 export class Company {
-
-
   @PrimaryGeneratedColumn('uuid')
-  id!:string;
-
-
+  id!: string;
 
   @Column()
-  companyName!:string;
-
-
+  companyName!: string;
 
   @Column({
-    nullable:true,
+    nullable: true,
   })
-  description!:string;
-
-
+  description!: string;
 
   @Column({
-    nullable:true,
+    nullable: true,
   })
-  website!:string;
-
-
+  website!: string;
 
   @Column({
-    nullable:true,
+    nullable: true,
   })
-  logo!:string;
-
-
-
-  @Column()
-  location!:string;
-
-
+  location!: string;
 
   @Column({
-    default:CompanyStatus.PENDING,
+    nullable: true,
   })
-  status!:CompanyStatus;
+  logoUrl!: string;
 
-
+  @Column({
+    default: CompanyStatus.PENDING,
+  })
+  status!: CompanyStatus;
 
   @OneToOne(
-    ()=>User,
-    user=>user.company,
+    () => User,
+    (user) => user.company,
   )
   @JoinColumn()
-  user!:User;
+  user!: User;
 
   @OneToMany(
-  ()=>Job,
-  job=>job.company
-)
-jobs!:Job[];
-
-
+    () => Job,
+    (job) => job.company,
+  )
+  jobs!: Job[];
 
   @CreateDateColumn()
-  createdAt!:Date;
-
-
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt!:Date;
-
-
+  updatedAt!: Date;
 }

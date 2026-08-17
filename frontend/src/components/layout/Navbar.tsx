@@ -1,276 +1,712 @@
-'use client';
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { Menu, X } from 'lucide-react';
-import { useState ,useEffect} from 'react';
-import { User } from '@/types/user';
-import Image from 'next/image';
-import { type AuthUser, getCurrentUser } from '@/lib/auth';
-export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
- const pathname = usePathname();
-const [isNavigating, setIsNavigating] = useState(false);
+"use client";
 
-const [user, setUser] = useState<AuthUser | null>(null);
+import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  Menu,
+  X,
+  Settings,
+  LogOut,
+  ChevronDown,
+  User as UserIcon,
+  Bell,
+  Check,
+} from "lucide-react";
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import api from "@/lib/axios";
 
-useEffect(() => {
-  const updateUser = () => {
-    setUser(getCurrentUser());
+import { type AuthUser, getCurrentUser } from "@/lib/auth";
+
+interface DashboardUser {
+  id: string;
+  email: string;
+  role: "JOB_SEEKER" | "COMPANY" | "ADMIN";
+
+  firstName?: string;
+  lastName?: string;
+
+  phone?: string;
+  location?: string;
+  professionalTitle?: string;
+  bio?: string;
+
+  profileImageUrl?: string;
+
+  resumeUrl?: string;
+  resumeFileName?: string;
+
+  company?: {
+    companyName: string;
   };
+}
 
-  // Load initially
-  updateUser();
+interface ProfileAvatarProps {
+  user: DashboardUser;
+  displayName: string;
+  size?: "small" | "normal";
+}
 
-  // Listen for profile changes
-  window.addEventListener('userUpdated', updateUser);
+function ProfileAvatar({
+  user,
+  displayName,
+  size = "normal",
+}: ProfileAvatarProps) {
+  const initial = displayName.charAt(0).toUpperCase();
 
-  return () => {
-    window.removeEventListener('userUpdated', updateUser);
-  };
-}, [pathname]);
+  const imageUrl = user.profileImageUrl
+    ? user.profileImageUrl.startsWith("http")
+      ? user.profileImageUrl
+      : `http://localhost:3000${
+          user.profileImageUrl.startsWith("/") ? "" : "/"
+        }${user.profileImageUrl}`
+    : null;
 
-const handleNavigation = () => {
-  setIsNavigating(true);
-};
   return (
-    <header className="sticky top-0 z-50 w-full border-b shadow-2xl border-slate-200 bg-white dark:border-slate-800 dark:bg-[#020817]">
-      <nav className="ml-5  flex h-30  items-center justify-between  sm:px-6 lg:px-10">
+    <div
+      className={`
+        flex shrink-0 items-center justify-center
+        overflow-hidden rounded-full
+        bg-[#1671B9]
+        font-bold text-white
+        ring-2 ring-[#1671B9]/10
+        ${size === "normal" ? "h-10 w-10 text-sm" : "h-9 w-9 text-xs"}
+      `}
+    >
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={`${displayName} profile`}
+          className="h-full w-full object-cover"
+          onError={(event) => {
+            console.error("Profile image failed:", imageUrl);
 
-    
-        {/* Logo */}
-<Link
-  href="/"
-  className="flex items-center"
->
-  <Image
-    src={process.env.NEXT_PUBLIC_LOGO_URL!}
-    alt="Job Portal"
-    width={90}
-    height={30}
-    priority
-    className="h-auto w-auto object-contain"
-  />
-</Link>
-<div className="hidden items-center gap-7 md:flex">
+            event.currentTarget.style.display = "none";
+          }}
+        />
+      ) : (
+        initial
+      )}
+    </div>
+  );
+}
 
-  {/* Find Jobs */}
-  <Link
-    href="/jobs"
-    onClick={handleNavigation}
-    className={`group relative text-lg font-medium transition-colors duration-200 ${
-      pathname === '/jobs'
-        ? 'text-[#1671B9] dark:text-[#4da3e8]'
-        : 'text-slate-800 hover:text-[#1671B9] dark:text-slate-200 dark:hover:text-[#4da3e8]'
-    }`}
-  >
-    Find Jobs
+export default function Navbar() {
+  const router = useRouter();
+  const pathname = usePathname();
 
-    <span
-      className={`absolute -bottom-[2px] left-0 h-[2px] rounded-full bg-[#1671B9] dark:bg-[#4da3e8] ${
-        pathname === '/jobs' && !isNavigating
-          ? 'w-full opacity-100'
-          : 'w-0 opacity-0'
-      }`}
-    />
+  const [isOpen, setIsOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-    {!isNavigating && pathname !== '/jobs' && (
-      <span className="absolute -bottom-[2px] left-0 h-[2px] w-0 rounded-full bg-[#1671B9] opacity-0 transition-all duration-200 group-hover:w-full group-hover:opacity-100 dark:bg-[#4da3e8]" />
-    )}
-  </Link>
+  const [user, setUser] = useState<DashboardUser | null>(null);
 
+  const [notifications, setNotifications] = useState<any[]>([]);
 
-  {/* Find Companies */}
-  <Link
-    href="/companies"
-    onClick={handleNavigation}
-    className={`group relative text-lg font-medium transition-colors duration-200 ${
-      pathname === '/companies'
-        ? 'text-[#1671B9] dark:text-[#4da3e8]'
-        : 'text-slate-800 hover:text-[#1671B9] dark:text-slate-200 dark:hover:text-[#4da3e8]'
-    }`}
-  >
-    Find Companies
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
 
-    <span
-      className={`absolute -bottom-[2px] left-0 h-[2px] rounded-full bg-[#1671B9] dark:bg-[#4da3e8] ${
-        pathname === '/companies' && !isNavigating
-          ? 'w-full opacity-100'
-          : 'w-0 opacity-0'
-      }`}
-    />
+  // ============================================
+  // Load current user
+  // ============================================
 
-    {!isNavigating && pathname !== '/companies' && (
-      <span className="absolute -bottom-[2px] left-0 h-[2px] w-0 rounded-full bg-[#1671B9] opacity-0 transition-all duration-200 group-hover:w-full group-hover:opacity-100 dark:bg-[#4da3e8]" />
-    )}
-  </Link>
+  useEffect(() => {
+    let mounted = true;
 
+    const loadUser = async () => {
+      // --------------------------------------------
+      // 1. Load cached user immediately
+      // --------------------------------------------
 
-  {/* About Us */}
-  <Link
-    href="/about"
-    onClick={handleNavigation}
-    className={`group relative text-lg font-medium transition-colors duration-200 ${
-      pathname === '/about'
-        ? 'text-[#1671B9] dark:text-[#4da3e8]'
-        : 'text-slate-800 hover:text-[#1671B9] dark:text-slate-200 dark:hover:text-[#4da3e8]'
-    }`}
-  >
-    About Us
+      const storedUser = localStorage.getItem("user");
 
-    <span
-      className={`absolute -bottom-[2px] left-0 h-[2px] rounded-full bg-[#1671B9] dark:bg-[#4da3e8] ${
-        pathname === '/about' && !isNavigating
-          ? 'w-full opacity-100'
-          : 'w-0 opacity-0'
-      }`}
-    />
+      if (storedUser) {
+        try {
+          const cachedUser = JSON.parse(storedUser) as DashboardUser;
 
-    {!isNavigating && pathname !== '/about' && (
-      <span className="absolute -bottom-[2px] left-0 h-[2px] w-0 rounded-full bg-[#1671B9] opacity-0 transition-all duration-200 group-hover:w-full group-hover:opacity-100 dark:bg-[#4da3e8]" />
-    )}
-  </Link>
+          if (mounted) {
+            setUser(cachedUser);
+          }
+        } catch (error) {
+          console.error("Failed to parse stored user:", error);
+        }
+      }
 
+      // --------------------------------------------
+      // 2. Get latest user from backend
+      // --------------------------------------------
 
-  {/* Contact */}
-  <Link
-    href="/contact"
-    onClick={handleNavigation}
-    className={`group relative text-lg font-medium transition-colors duration-200 ${
-      pathname === '/contact'
-        ? 'text-[#1671B9] dark:text-[#4da3e8]'
-        : 'text-slate-800 hover:text-[#1671B9] dark:text-slate-200 dark:hover:text-[#4da3e8]'
-    }`}
-  >
-    Contact
+      const token = localStorage.getItem("accessToken");
 
-    <span
-      className={`absolute -bottom-[2px] left-0 h-[2px] rounded-full bg-[#1671B9] dark:bg-[#4da3e8] ${
-        pathname === '/contact' && !isNavigating
-          ? 'w-full opacity-100'
-          : 'w-0 opacity-0'
-      }`}
-    />
+      if (!token) {
+        if (mounted) {
+          setUser(null);
+        }
 
-    {!isNavigating && pathname !== '/contact' && (
-      <span className="absolute -bottom-[2px] left-0 h-[2px] w-0 rounded-full bg-[#1671B9] opacity-0 transition-all duration-200 group-hover:w-full group-hover:opacity-100 dark:bg-[#4da3e8]" />
-    )}
-  </Link>
+        return;
+      }
 
-</div>
+      try {
+        const response = await api.get("/users/profile");
 
-        {/* Desktop Authentication */}
-<div className="hidden items-center gap-3 md:flex">
+        if (!mounted) return;
 
-  {user ? (
-    <>
-      <Link
-        href="/dashboard"
-        onClick={handleNavigation}
-        className="rounded-lg bg-[#1671B9] px-5 py-2.5 text-lg font-medium text-white transition-all hover:bg-[#0F5F9E] hover:shadow-md"
-      >
-        Dashboard
-      </Link>
+        const latestUser = response.data as DashboardUser;
 
-      <div className="ml-3 flex items-center gap-2">
-  <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1671B9] text-sm font-semibold text-white">
-  {user.profileImageUrl ? (
-    <img
-      src={`http://localhost:3000${user.profileImageUrl}`}
-      alt="Profile"
-      className="h-full w-full object-cover"
-    />
-  ) : (
-    <span>
-      {user.role === 'COMPANY'
-        ? user.company?.companyName?.charAt(0).toUpperCase() || 'C'
-        : user.role === 'ADMIN'
-          ? 'A'
-          : user.firstName?.charAt(0).toUpperCase() || 'J'}
-    </span>
-  )}
-</div>
+        // Update React state
+        setUser(latestUser);
 
-<div className="flex min-w-0 flex-col">
-  <span className="max-w-40 truncate text-sm font-semibold text-slate-800 dark:text-white">
-    {user.role === 'COMPANY'
-      ? user.company?.companyName || 'Company'
-      : user.role === 'ADMIN'
-        ? 'Administrator'
-        : `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() ||
-          'Job Seeker'}
-  </span>
+        // Update localStorage
+        localStorage.setItem("user", JSON.stringify(latestUser));
+      } catch (error: any) {
+        console.error("Failed to load navbar user:", error);
 
-  <span className="text-xs text-slate-500 dark:text-slate-400">
-    {user.role === 'JOB_SEEKER'
-      ? 'Job Seeker'
-      : user.role === 'COMPANY'
-        ? 'Employer'
-        : 'Administrator'}
-  </span>
-</div>
-</div>
-    </>
-  ) : (
-    <>
-      <Link
-        href="/login"
-        onClick={handleNavigation}
-        className="rounded-lg px-4 py-2 text-lg font-medium text-slate-800 transition-colors hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-[#4da3e8]"
-      >
-        Login
-      </Link>
+        if (error?.response?.status === 401) {
+          localStorage.removeItem("accessToken");
 
-      <Link
-        href="/register"
-        onClick={handleNavigation}
-        className="rounded-lg bg-[#1671B9] px-5 py-2.5 text-lg font-medium text-white transition-all hover:bg-[#0F5F9E] hover:shadow-md"
-      >
-        Sign Up
-      </Link>
+          localStorage.removeItem("user");
 
-      <div className="ml-5 flex items-center whitespace-nowrap text-[12px] text-slate-400">
-        <span className="mr-2">|</span>
+          if (mounted) {
+            setUser(null);
+          }
+        }
+      }
+    };
 
-        <span className="mr-2 text-lg">
-          Employers:
-        </span>
+    loadUser();
 
-        <Link
-          href="/register"
-          onClick={handleNavigation}
-          className="text-lg text-[#1671B9] transition hover:text-[#0F5F9E] hover:underline"
-        >
-          Are you recruiting?
+    // --------------------------------------------
+    // Profile upload/update event
+    // --------------------------------------------
+
+    const handleUserUpdated = () => {
+      const storedUser = localStorage.getItem("user");
+
+      if (!storedUser) return;
+
+      try {
+        const updatedUser = JSON.parse(storedUser) as DashboardUser;
+
+        if (mounted) {
+          setUser(updatedUser);
+        }
+      } catch (error) {
+        console.error("Failed to update navbar user:", error);
+      }
+    };
+
+    window.addEventListener("userUpdated", handleUserUpdated);
+
+    return () => {
+      mounted = false;
+
+      window.removeEventListener("userUpdated", handleUserUpdated);
+    };
+  }, []);
+
+  // ============================================
+  // Navigation
+  // ============================================
+
+  const handleNavigation = () => {
+    setIsNavigating(true);
+  };
+
+  // ============================================
+  // User display
+  // ============================================
+
+  const displayName =
+    user?.role === "COMPANY"
+      ? user.company?.companyName || "Company"
+      : user?.role === "ADMIN"
+      ? "Administrator"
+      : `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() ||
+        "Job Seeker";
+
+  const initial = displayName.charAt(0).toUpperCase();
+
+  const roleLabel =
+    user?.role === "JOB_SEEKER"
+      ? "Job Seeker"
+      : user?.role === "COMPANY"
+      ? "Company"
+      : "Administrator";
+
+  // ============================================
+  // Profile
+  // ============================================
+
+  const handleProfile = () => {
+    setProfileOpen(false);
+
+    if (user?.role === "COMPANY") {
+      router.push("/dashboard/profile");
+      return;
+    }
+
+    router.push("/dashboard/profile");
+  };
+
+  // ============================================
+  // Settings
+  // ============================================
+
+  const handleSettings = () => {
+    setProfileOpen(false);
+    router.push("/dashboard/settings");
+  };
+
+  // ============================================
+  // Logout
+  // ============================================
+
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
+
+    setUser(null);
+    setProfileOpen(false);
+
+    router.replace("/login");
+  };
+
+  // ============================================
+  // Notification click
+  // ============================================
+
+  const handleNotificationClick = (notification: any) => {
+    setNotificationsOpen(false);
+
+    // Add your notification read/update API here
+    console.log("Notification clicked:", notification);
+  };
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#020817]">
+      <nav className="mx-auto flex h-30 items-center justify-between px-5 sm:px-6 lg:px-10">
+        {/* ================================================= */}
+        {/* LOGO */}
+        {/* ================================================= */}
+
+        <Link href="/" className="flex shrink-0 items-center">
+          <Image
+            src={process.env.NEXT_PUBLIC_LOGO_URL!}
+            alt="Job Portal"
+            width={90}
+            height={25}
+            priority
+            className="h-auto w-auto object-contain"
+          />
         </Link>
-      </div>
-    </>
-  )}
 
-</div>
+        {/* ================================================= */}
+        {/* NAVIGATION */}
+        {/* ================================================= */}
 
-        {/* Mobile Menu Button */}
+        <div className="hidden items-center gap-7 md:flex">
+          <Link
+            href="/jobs"
+            onClick={handleNavigation}
+            className={`group relative text-lg font-medium transition-colors ${
+              pathname === "/jobs"
+                ? "text-[#1671B9]"
+                : "text-slate-800 hover:text-[#1671B9] dark:text-slate-200"
+            }`}
+          >
+            Find Jobs
+            <span
+              className={`absolute -bottom-1 left-0 h-[2px] rounded-full bg-[#1671B9] transition-all ${
+                pathname === "/jobs" && !isNavigating ? "w-full" : "w-0"
+              }`}
+            />
+          </Link>
+
+          <Link
+            href="/companies"
+            onClick={handleNavigation}
+            className={`group relative text-lg font-medium transition-colors ${
+              pathname === "/companies"
+                ? "text-[#1671B9]"
+                : "text-slate-800 hover:text-[#1671B9] dark:text-slate-200"
+            }`}
+          >
+            Find Companies
+            <span
+              className={`absolute -bottom-1 left-0 h-[2px] rounded-full bg-[#1671B9] transition-all ${
+                pathname === "/companies" && !isNavigating ? "w-full" : "w-0"
+              }`}
+            />
+          </Link>
+
+          <Link
+            href="/about"
+            onClick={handleNavigation}
+            className={`group relative text-lg font-medium transition-colors ${
+              pathname === "/about"
+                ? "text-[#1671B9]"
+                : "text-slate-800 hover:text-[#1671B9] dark:text-slate-200"
+            }`}
+          >
+            About Us
+            <span
+              className={`absolute -bottom-1 left-0 h-[2px] rounded-full bg-[#1671B9] transition-all ${
+                pathname === "/about" && !isNavigating ? "w-full" : "w-0"
+              }`}
+            />
+          </Link>
+
+          <Link
+            href="/contact"
+            onClick={handleNavigation}
+            className={`group relative text-lg font-medium transition-colors ${
+              pathname === "/contact"
+                ? "text-[#1671B9]"
+                : "text-slate-800 hover:text-[#1671B9] dark:text-slate-200"
+            }`}
+          >
+            Contact
+            <span
+              className={`absolute -bottom-1 left-0 h-[2px] rounded-full bg-[#1671B9] transition-all ${
+                pathname === "/contact" && !isNavigating ? "w-full" : "w-0"
+              }`}
+            />
+          </Link>
+        </div>
+
+        {/* ================================================= */}
+        {/* RIGHT SIDE */}
+        {/* ================================================= */}
+
+        <div className="hidden items-center gap-3 md:flex">
+          {user ? (
+            <>
+              {/* Dashboard */}
+
+              <Link
+                href="/dashboard"
+                onClick={handleNavigation}
+                className="rounded-lg bg-[#1671B9] px-5 py-2.5 text-lg font-medium text-white transition hover:bg-[#0F5F9E]"
+              >
+                Dashboard
+              </Link>
+
+              {/* ================================================= */}
+              {/* NOTIFICATIONS */}
+              {/* ================================================= */}
+
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setNotificationsOpen((previous) => !previous)}
+                  aria-label="Notifications"
+                  aria-expanded={notificationsOpen}
+                  className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-[#1671B9]/30 hover:bg-blue-50 hover:text-[#1671B9] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <Bell size={19} />
+
+                  {unreadCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-900">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {notificationsOpen && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="Close notifications"
+                      onClick={() => setNotificationsOpen(false)}
+                      className="fixed inset-0 z-40 cursor-default"
+                    />
+
+                    <div className="absolute right-0 top-12 z-50 w-[340px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                      {/* Header */}
+
+                      <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                        <div>
+                          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                            Notifications
+                          </h3>
+
+                          <p className="mt-0.5 text-xs text-slate-400">
+                            {unreadCount > 0
+                              ? `${unreadCount} unread`
+                              : "All caught up"}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNotificationsOpen(false);
+
+                            router.push("/dashboard/notifications");
+                          }}
+                          className="text-xs font-semibold text-[#1671B9] hover:underline"
+                        >
+                          View all
+                        </button>
+                      </div>
+
+                      {/* Body */}
+
+                      <div className="max-h-[360px] overflow-y-auto">
+                        {notificationsLoading ? (
+                          <div className="px-4 py-10 text-center">
+                            <p className="text-sm text-slate-400">
+                              Loading notifications...
+                            </p>
+                          </div>
+                        ) : notifications.length === 0 ? (
+                          <div className="px-4 py-10 text-center">
+                            <Bell
+                              size={30}
+                              className="mx-auto text-slate-300"
+                            />
+
+                            <p className="mt-3 text-sm font-medium text-slate-600 dark:text-slate-300">
+                              No notifications
+                            </p>
+
+                            <p className="mt-1 text-xs text-slate-400">
+                              You're all caught up.
+                            </p>
+                          </div>
+                        ) : (
+                          notifications.slice(0, 5).map((notification) => (
+                            <button
+                              key={notification.id}
+                              type="button"
+                              onClick={() =>
+                                handleNotificationClick(notification)
+                              }
+                              className={`flex w-full gap-3 border-b border-slate-100 px-4 py-3 text-left transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800 ${
+                                !notification.isRead
+                                  ? "bg-blue-50/50 dark:bg-blue-950/20"
+                                  : ""
+                              }`}
+                            >
+                              <div className="mt-1.5 shrink-0">
+                                {notification.isRead ? (
+                                  <Check size={15} className="text-slate-300" />
+                                ) : (
+                                  <span className="block h-2.5 w-2.5 rounded-full bg-[#1671B9]" />
+                                )}
+                              </div>
+
+                              <div className="min-w-0 flex-1">
+                                <p
+                                  className={`truncate text-sm ${
+                                    notification.isRead
+                                      ? "font-medium text-slate-600 dark:text-slate-300"
+                                      : "font-semibold text-slate-900 dark:text-white"
+                                  }`}
+                                >
+                                  {notification.title}
+                                </p>
+
+                                <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                                  {notification.message}
+                                </p>
+
+                                <p className="mt-1 text-[10px] text-slate-400">
+                                  {new Date(
+                                    notification.createdAt
+                                  ).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Divider */}
+
+              <div className="mx-1 hidden h-7 w-px bg-slate-200 sm:block dark:bg-slate-700" />
+
+              {/* ================================================= */}
+              {/* PROFILE */}
+              {/* ================================================= */}
+
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setProfileOpen((previous) => !previous)}
+                  aria-expanded={profileOpen}
+                  aria-haspopup="menu"
+                  className="flex items-center gap-2 rounded-xl p-1.5 transition hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                    <div className="flex items-center gap-3">
+                      <ProfileAvatar
+                        user={user}
+                        displayName={displayName}
+                        size="small"
+                      />
+
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-800 dark:text-white">
+                          {displayName}
+                        </p>
+
+                        <p className="mt-1 truncate text-xs text-slate-400">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <ChevronDown
+                    size={16}
+                    className="hidden text-slate-400 lg:block"
+                  />
+                </button>
+
+                {/* ================================================= */}
+                {/* PROFILE DROPDOWN */}
+                {/* ================================================= */}
+
+                {profileOpen && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="Close profile menu"
+                      onClick={() => setProfileOpen(false)}
+                      className="fixed inset-0 z-40 cursor-default"
+                    />
+
+                    <div
+                      className="absolute right-0 top-12 z-50 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white py-2 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                      role="menu"
+                    >
+                      {/* Account */}
+
+                      <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                        <div className="flex items-center gap-3">
+                          {/* Small profile image */}
+
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1671B9] text-xs font-bold text-white">
+                            {user.profileImageUrl ? (
+                              <img
+                                src={
+                                  user.profileImageUrl.startsWith("http")
+                                    ? user.profileImageUrl
+                                    : `http://localhost:3000${user.profileImageUrl}`
+                                }
+                                alt={displayName}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              initial
+                            )}
+                          </div>
+
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-slate-800 dark:text-white">
+                              {displayName}
+                            </p>
+
+                            <p className="mt-1 truncate text-xs text-slate-400">
+                              {user.email}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Profile */}
+
+                      <button
+                        type="button"
+                        onClick={handleProfile}
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-[#1671B9] dark:text-slate-300 dark:hover:bg-slate-800"
+                      >
+                        <UserIcon size={17} />
+                        <span>Profile</span>
+                      </button>
+
+                      {/* Settings */}
+
+                      <button
+                        type="button"
+                        onClick={handleSettings}
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-[#1671B9] dark:text-slate-300 dark:hover:bg-slate-800"
+                      >
+                        <Settings size={17} />
+                        <span>Settings</span>
+                      </button>
+
+                      <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+
+                      {/* Logout */}
+
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-500 transition hover:bg-red-50 dark:hover:bg-red-950/20"
+                      >
+                        <LogOut size={17} />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Login */}
+
+              <Link
+                href="/login"
+                onClick={handleNavigation}
+                className="rounded-lg px-4 py-2 text-lg font-medium text-slate-800 hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200"
+              >
+                Login
+              </Link>
+
+              {/* Sign Up */}
+
+              <Link
+                href="/register"
+                onClick={handleNavigation}
+                className="rounded-lg bg-[#1671B9] px-5 py-2.5 text-lg font-medium text-white hover:bg-[#0F5F9E]"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
+        </div>
+
+        {/* ================================================= */}
+        {/* MOBILE */}
+        {/* ================================================= */}
+
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-800 transition-colors hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-[#4da3e8] md:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-800 hover:bg-blue-50 hover:text-[#1671B9] md:hidden dark:text-slate-200"
           aria-label="Toggle navigation menu"
-          aria-expanded={isOpen}
         >
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
-
       </nav>
 
       {/* Mobile Navigation */}
+
       {isOpen && (
         <div className="border-t border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-[#020817] md:hidden">
-
           <div className="flex flex-col gap-2">
-
             <Link
               href="/jobs"
               onClick={() => setIsOpen(false)}
-              className="rounded-lg px-4 py-3 text-sm font-medium text-slate-800 transition-colors hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-[#4da3e8]"
+              className="rounded-lg px-4 py-3 text-sm font-medium text-slate-800 hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200"
             >
               Find Jobs
             </Link>
@@ -278,7 +714,7 @@ const handleNavigation = () => {
             <Link
               href="/companies"
               onClick={() => setIsOpen(false)}
-              className="rounded-lg px-4 py-3 text-sm font-medium text-slate-800 transition-colors hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-[#4da3e8]"
+              className="rounded-lg px-4 py-3 text-sm font-medium text-slate-800 hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200"
             >
               Find Companies
             </Link>
@@ -286,52 +722,19 @@ const handleNavigation = () => {
             <Link
               href="/about"
               onClick={() => setIsOpen(false)}
-              className="rounded-lg px-4 py-3 text-sm font-medium text-slate-800 transition-colors hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-[#4da3e8]"
+              className="rounded-lg px-4 py-3 text-sm font-medium text-slate-800 hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200"
             >
               About Us
             </Link>
 
             <Link
-            href="/contact"
-            className="text-sm font-medium text-slate-800 transition-colors hover:text-[#1671B9] dark:text-slate-200 dark:hover:text-[#4da3e8]"
-          >
-            Contact
-          </Link>
-
-            <div className="my-2 border-t border-slate-200 dark:border-slate-800" />
-
-            <Link
-              href="/login"
+              href="/contact"
               onClick={() => setIsOpen(false)}
-              className="rounded-lg px-4 py-3 text-sm font-medium text-slate-800 transition-colors hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-[#4da3e8]"
+              className="rounded-lg px-4 py-3 text-sm font-medium text-slate-800 hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200"
             >
-              Login
+              Contact
             </Link>
-
-            <Link
-              href="/register"
-              onClick={() => setIsOpen(false)}
-              className="rounded-lg bg-[#1671B9] px-4 py-3 text-center text-sm font-medium text-white transition-colors hover:bg-[#0F5F9E]"
-            >
-              Sign Up
-            </Link>
-             <div className="ml-2 flex items-center whitespace-nowrap text-[12px] text-slate-400">
-              <span className="mr-2">|</span>
-
-              <span className="mr-1">
-                Employers:
-              </span>
-
-              <Link
-                href="/register"
-                className="font-medium text-primary transition hover:text-secondary hover:underline"
-              >
-                Are you recruiting?
-              </Link>
-            </div>
-
           </div>
-
         </div>
       )}
     </header>

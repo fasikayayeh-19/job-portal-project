@@ -160,7 +160,7 @@ const jobSeekerItems: MenuItem[] = [
   const companyItems: MenuItem[] = [
     {
       label: 'Company Profile',
-      href: '/dashboard/company-profile',
+      href: '/dashboard/profile',
       icon: <Building2 size={19} />,
     },
     {
@@ -183,6 +183,7 @@ const jobSeekerItems: MenuItem[] = [
       href: '/dashboard/company-applications',
       icon: <ClipboardList size={19} />,
     },
+  
   ];
 
   /* ==========================================================

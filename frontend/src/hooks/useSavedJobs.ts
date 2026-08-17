@@ -1,12 +1,20 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import {
   getSavedJobs,
   saveJob,
   removeSavedJob,
 } from '@/services/saved-jobs.service';
+
+// =====================================================
+// GET SAVED JOBS
+// =====================================================
 
 export function useSavedJobs() {
   return useQuery({
@@ -15,11 +23,16 @@ export function useSavedJobs() {
   });
 }
 
+// =====================================================
+// SAVE JOB
+// =====================================================
+
 export function useSaveJob() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: saveJob,
+    mutationFn: (jobId: string) =>
+      saveJob(jobId),
 
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -27,17 +40,22 @@ export function useSaveJob() {
       });
 
       queryClient.invalidateQueries({
-        queryKey: ['job-seeker-dashboard'],
+        queryKey: ['jobs'],
       });
     },
   });
 }
 
+// =====================================================
+// REMOVE SAVED JOB
+// =====================================================
+
 export function useRemoveSavedJob() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: removeSavedJob,
+    mutationFn: (jobId: string) =>
+      removeSavedJob(jobId),
 
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -45,7 +63,7 @@ export function useRemoveSavedJob() {
       });
 
       queryClient.invalidateQueries({
-        queryKey: ['job-seeker-dashboard'],
+        queryKey: ['jobs'],
       });
     },
   });

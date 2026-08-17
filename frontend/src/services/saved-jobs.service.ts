@@ -1,5 +1,9 @@
 import api from '@/lib/axios';
 
+// =====================================================
+// SAVED JOB TYPES
+// =====================================================
+
 export interface SavedJobCompany {
   id: string;
   companyName: string;
@@ -17,8 +21,16 @@ export interface SavedJob {
   job: {
     id: string;
     title: string;
+    description?: string;
+    requirements?: string;
+    skills?: string[];
     location: string;
     jobType: string;
+    experience?: string;
+    salary?: string | null;
+    deadline?: string | null;
+    status?: string;
+    createdAt?: string;
 
     company: SavedJobCompany;
 
@@ -26,20 +38,45 @@ export interface SavedJob {
   };
 }
 
+// =====================================================
+// GET MY SAVED JOBS
+// GET /saved-jobs
+// =====================================================
+
 export async function getSavedJobs(): Promise<SavedJob[]> {
-  const response = await api.get<SavedJob[]>('/saved-jobs');
+  const response = await api.get<SavedJob[]>(
+    '/saved-jobs',
+  );
 
   return response.data;
 }
 
-export async function saveJob(jobId: string) {
-  const response = await api.post(`/saved-jobs/${jobId}`);
+// =====================================================
+// SAVE JOB
+// POST /saved-jobs/:jobId
+// =====================================================
+
+export async function saveJob(
+  jobId: string,
+) {
+  const response = await api.post(
+    `/saved-jobs/${jobId}`,
+  );
 
   return response.data;
 }
 
-export async function removeSavedJob(jobId: string) {
-  const response = await api.delete(`/saved-jobs/${jobId}`);
+// =====================================================
+// REMOVE SAVED JOB
+// DELETE /saved-jobs/:jobId
+// =====================================================
+
+export async function removeSavedJob(
+  jobId: string,
+) {
+  const response = await api.delete(
+    `/saved-jobs/${jobId}`,
+  );
 
   return response.data;
 }
