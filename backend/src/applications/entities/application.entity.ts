@@ -23,12 +23,11 @@ export class Application {
   id!: string;
 
 
-  @Column({
-    type:'text',
-    nullable:true
-  })
-  coverLetter!: string;
-
+ @Column({
+  type: 'text',
+  nullable: true,
+})
+coverLetter!: string | null;
 
 
   @Column({
@@ -54,8 +53,17 @@ companyNote?: string;
   @JoinColumn()
   seeker!:User;
 
+ @Column({
+  type: 'text',
+  nullable: true,
+})
+resumeUrl!: string | null;
 
-
+@Column({
+  type: 'text',
+  nullable: true,
+})
+resumeFileName!: string | null;
   @ManyToOne(
     ()=>Job,
     job=>job.applications,

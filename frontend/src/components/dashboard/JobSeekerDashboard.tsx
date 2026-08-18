@@ -45,7 +45,7 @@ export default function JobSeekerDashboard() {
       : user.email;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pl-2">
 
       <DashboardToolbar user={user} />
 

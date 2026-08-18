@@ -1,14 +1,11 @@
-import { IsString, IsUUID } from 'class-validator';
-
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateApplicationDto {
-
-
-  @IsUUID()
+  @IsNotEmpty()
+  @IsString()
   jobId!: string;
 
-
+  @IsOptional()
   @IsString()
-  coverLetter!: string;
-
+  coverLetter?: string;
 }

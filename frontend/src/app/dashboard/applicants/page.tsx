@@ -1,5 +1,4 @@
 'use client';
-
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -24,6 +23,7 @@ import type {
 } from '@/services/applications.service';
 
 export default function ApplicantsPage() {
+  
   const {
     data: applicants = [],
     isLoading,
@@ -47,7 +47,7 @@ const jobFromUrl = searchParams.get('job');
 
   const updateStatus = useUpdateApplicationStatus();
   const updateNote = useUpdateApplicationNote();
-
+  
   // =====================================================
   // FILTER OPTIONS
   // =====================================================
@@ -800,28 +800,62 @@ function ApplicantModal({
 
           {/* Resume */}
 
-          {applicant.seeker.resumeUrl && (
-            <div>
-              <h3 className="mb-2 text-sm font-semibold text-slate-900 dark:text-white">
-                Resume
-              </h3>
 
-              <a
-                href={applicant.seeker.resumeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-[#1671B9] hover:bg-blue-50 dark:border-slate-700 dark:hover:bg-slate-800"
-              >
-                <FileText size={17} />
+{applicant.seeker.resumeUrl && (
+  <div>
+    <h3 className="mb-3 text-sm font-semibold text-slate-900">
+      Resume
+    </h3>
 
-                {applicant.seeker
-                  .resumeFileName ||
-                  'View Resume'}
+    <div className="flex flex-wrap gap-3">
+      {/* Open in new tab */}
+      <a
+        href={
+          applicant.seeker.resumeUrl.startsWith('http')
+            ? applicant.seeker.resumeUrl
+            : `http://localhost:3000${applicant.seeker.resumeUrl}`
+        }
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 rounded-lg bg-[#1671B9] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#0F5F9E]"
+      >
+        <ExternalLink size={16} />
+        Open Resume
+      </a>
 
-                <ExternalLink size={15} />
-              </a>
-            </div>
-          )}
+      {/* Download */}
+      <a
+        href={
+          applicant.seeker.resumeUrl.startsWith('http')
+            ? applicant.seeker.resumeUrl
+            : `http://localhost:3000${applicant.seeker.resumeUrl}`
+        }
+        download={applicant.seeker.resumeFileName || 'resume.pdf'}
+        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+      >
+        <FileText size={16} />
+        Download
+      </a>
+    </div>
+
+    {/* Resume Preview */}
+    <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <iframe
+        src={
+          applicant.seeker.resumeUrl.startsWith('http')
+            ? applicant.seeker.resumeUrl
+            : `http://localhost:3000${applicant.seeker.resumeUrl}`
+        }
+        title={`${applicant.seeker.firstName ?? 'Applicant'} Resume`}
+        className="h-[700px] w-full"
+      />
+    </div>
+  </div>
+)}
+
+
+
+          
 
           {/* Private Note */}
 

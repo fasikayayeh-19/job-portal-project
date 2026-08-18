@@ -214,6 +214,7 @@ export default function CompanyDashboard({ user }: CompanyDashboardProps) {
 
       <RecentApplicants
         applicants={(data?.recentApplications ?? []).map((application) => ({
+           id: application.id,
           name:
             `${application.seeker.firstName ?? ""} ${
               application.seeker.lastName ?? ""
@@ -460,11 +461,11 @@ function JobPerformance({
 /* =====================================================
    RECENT APPLICANTS
 ===================================================== */
-
 function RecentApplicants({
   applicants,
 }: {
   applicants: {
+    id: string;
     name: string;
     job: string;
     status: string;
@@ -493,11 +494,11 @@ function RecentApplicants({
       </div>
 
       <div className="divide-y divide-slate-200 dark:divide-slate-800">
-        {applicants.map((applicant) => (
-          <div
-            key={`${applicant.name}-${applicant.date}`}
-            className="flex flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:justify-between"
-          >
+       {applicants.map((applicant) => (
+  <div
+    key={applicant.id}
+    className="flex flex-col gap-3 px-6 py-5 sm:flex-row sm:items-center sm:justify-between"
+  >
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 font-semibold text-[#1671B9] dark:bg-blue-950/30">
                 {applicant.name.charAt(0).toUpperCase()}

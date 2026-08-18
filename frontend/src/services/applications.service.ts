@@ -149,16 +149,6 @@ export interface CreateApplicationData {
   coverLetter?: string;
 }
 
-export async function applyForJob(
-  data: CreateApplicationData,
-) {
-  const response = await api.post(
-    '/applications',
-    data,
-  );
-
-  return response.data;
-}
 
 
 export async function createApplication(
@@ -171,4 +161,6 @@ export async function createApplication(
 
   return response.data;
 }
+
+
 

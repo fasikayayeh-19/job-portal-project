@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -13,20 +12,15 @@ import {
   type CreateApplicationData,
 } from '@/services/applications.service';
 
-// =====================================================
-// MY APPLICATIONS
-// =====================================================
-
-export function useMyApplications() {
+export function useMyApplications(
+  enabled = true,
+) {
   return useQuery({
     queryKey: ['my-applications'],
     queryFn: getMyApplications,
+    enabled,
   });
 }
-
-// =====================================================
-// APPLY FOR JOB
-// =====================================================
 
 export function useApplyJob() {
   const queryClient = useQueryClient();

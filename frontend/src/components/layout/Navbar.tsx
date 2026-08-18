@@ -12,6 +12,11 @@ import {
   Bell,
   Check,
 } from "lucide-react";
+import {
+  getMyNotifications,
+  markNotificationAsRead,
+  type Notification,
+} from "@/services/notifications.service";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import api from "@/lib/axios";
@@ -102,108 +107,196 @@ export default function Navbar() {
 
   const [user, setUser] = useState<DashboardUser | null>(null);
 
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const loadNotifications = async () => {
+    try {
+      setNotificationsLoading(true);
 
+      const data = await getMyNotifications();
+
+      setNotifications(data);
+
+      const unread = data.filter((notification) => !notification.isRead).length;
+
+      setUnreadCount(unread);
+    } catch (error) {
+      console.error("Failed to load notifications:", error);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  };
   // ============================================
   // Load current user
   // ============================================
+useEffect(() => {
+  let mounted = true;
 
-  useEffect(() => {
-    let mounted = true;
+  const loadUser = async () => {
+    // ============================================
+    // 1. Load cached user immediately
+    // ============================================
 
-    const loadUser = async () => {
-      // --------------------------------------------
-      // 1. Load cached user immediately
-      // --------------------------------------------
+    const storedUser = localStorage.getItem("user");
 
-      const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const cachedUser =
+          JSON.parse(storedUser) as DashboardUser;
 
-      if (storedUser) {
-        try {
-          const cachedUser = JSON.parse(storedUser) as DashboardUser;
-
-          if (mounted) {
-            setUser(cachedUser);
-          }
-        } catch (error) {
-          console.error("Failed to parse stored user:", error);
+        if (mounted) {
+          setUser(cachedUser);
         }
+      } catch (error) {
+        console.error(
+          "Failed to parse stored user:",
+          error,
+        );
+      }
+    }
+
+    // ============================================
+    // 2. Check token
+    // ============================================
+
+    const token =
+      localStorage.getItem("accessToken");
+
+    if (!token) {
+      if (mounted) {
+        setUser(null);
+        setNotifications([]);
+        setUnreadCount(0);
       }
 
-      // --------------------------------------------
-      // 2. Get latest user from backend
-      // --------------------------------------------
+      return;
+    }
 
-      const token = localStorage.getItem("accessToken");
+    // ============================================
+    // 3. Load latest user
+    // ============================================
 
-      if (!token) {
+    try {
+      const response =
+        await api.get("/users/profile");
+
+      if (!mounted) return;
+
+      const latestUser =
+        response.data as DashboardUser;
+
+      setUser(latestUser);
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(latestUser),
+      );
+    } catch (error: any) {
+      console.error(
+        "Failed to load navbar user:",
+        error,
+      );
+
+      if (error?.response?.status === 401) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("user");
+
         if (mounted) {
           setUser(null);
+          setNotifications([]);
+          setUnreadCount(0);
         }
 
         return;
       }
+    }
 
-      try {
-        const response = await api.get("/users/profile");
+    // ============================================
+    // 4. Load notifications
+    // ============================================
 
-        if (!mounted) return;
-
-        const latestUser = response.data as DashboardUser;
-
-        // Update React state
-        setUser(latestUser);
-
-        // Update localStorage
-        localStorage.setItem("user", JSON.stringify(latestUser));
-      } catch (error: any) {
-        console.error("Failed to load navbar user:", error);
-
-        if (error?.response?.status === 401) {
-          localStorage.removeItem("accessToken");
-
-          localStorage.removeItem("user");
-
-          if (mounted) {
-            setUser(null);
-          }
-        }
+    try {
+      if (mounted) {
+        setNotificationsLoading(true);
       }
-    };
 
-    loadUser();
+      const data =
+        await getMyNotifications();
 
-    // --------------------------------------------
-    // Profile upload/update event
-    // --------------------------------------------
+      if (!mounted) return;
 
-    const handleUserUpdated = () => {
-      const storedUser = localStorage.getItem("user");
+      setNotifications(data);
 
-      if (!storedUser) return;
+      setUnreadCount(
+        data.filter(
+          (notification) =>
+            !notification.isRead,
+        ).length,
+      );
+    } catch (error) {
+      console.error(
+        "Failed to load notifications:",
+        error,
+      );
 
-      try {
-        const updatedUser = JSON.parse(storedUser) as DashboardUser;
-
-        if (mounted) {
-          setUser(updatedUser);
-        }
-      } catch (error) {
-        console.error("Failed to update navbar user:", error);
+      if (mounted) {
+        setNotifications([]);
+        setUnreadCount(0);
       }
-    };
+    } finally {
+      if (mounted) {
+        setNotificationsLoading(false);
+      }
+    }
+  };
 
-    window.addEventListener("userUpdated", handleUserUpdated);
+  // ============================================
+  // Run
+  // ============================================
 
-    return () => {
-      mounted = false;
+  loadUser();
 
-      window.removeEventListener("userUpdated", handleUserUpdated);
-    };
-  }, []);
+  // ============================================
+  // Profile upload/update event
+  // ============================================
+
+  const handleUserUpdated = () => {
+    const storedUser =
+      localStorage.getItem("user");
+
+    if (!storedUser) return;
+
+    try {
+      const updatedUser =
+        JSON.parse(storedUser) as DashboardUser;
+
+      if (mounted) {
+        setUser(updatedUser);
+      }
+    } catch (error) {
+      console.error(
+        "Failed to update navbar user:",
+        error,
+      );
+    }
+  };
+
+  window.addEventListener(
+    "userUpdated",
+    handleUserUpdated,
+  );
+
+  return () => {
+    mounted = false;
+
+    window.removeEventListener(
+      "userUpdated",
+      handleUserUpdated,
+    );
+  };
+}, []);
 
   // ============================================
   // Navigation
@@ -275,12 +368,29 @@ export default function Navbar() {
   // ============================================
   // Notification click
   // ============================================
+  const handleNotificationClick = async (notification: Notification) => {
+    try {
+      if (!notification.isRead) {
+        await markNotificationAsRead(notification.id);
 
-  const handleNotificationClick = (notification: any) => {
-    setNotificationsOpen(false);
+        setNotifications((previous) =>
+          previous.map((item) =>
+            item.id === notification.id
+              ? {
+                  ...item,
+                  isRead: true,
+                }
+              : item
+          )
+        );
 
-    // Add your notification read/update API here
-    console.log("Notification clicked:", notification);
+        setUnreadCount((previous) => Math.max(previous - 1, 0));
+      }
+
+      setNotificationsOpen(false);
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
   };
 
   return (
@@ -399,7 +509,15 @@ export default function Navbar() {
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => setNotificationsOpen((previous) => !previous)}
+                  onClick={() => {
+                    const nextState = !notificationsOpen;
+
+                    setNotificationsOpen(nextState);
+
+                    if (nextState) {
+                      loadNotifications();
+                    }
+                  }}
                   aria-label="Notifications"
                   aria-expanded={notificationsOpen}
                   className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-[#1671B9]/30 hover:bg-blue-50 hover:text-[#1671B9] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -700,9 +818,15 @@ export default function Navbar() {
 
       {/* Mobile Navigation */}
 
+      {/* ================================================= */}
+      {/* MOBILE NAVIGATION */}
+      {/* ================================================= */}
+
       {isOpen && (
         <div className="border-t border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-[#020817] md:hidden">
           <div className="flex flex-col gap-2">
+            {/* Public Navigation */}
+
             <Link
               href="/jobs"
               onClick={() => setIsOpen(false)}
@@ -734,6 +858,109 @@ export default function Navbar() {
             >
               Contact
             </Link>
+
+            {/* Logged-in User */}
+
+            {user ? (
+              <>
+                <div className="my-2 border-t border-slate-200 dark:border-slate-700" />
+
+                {/* Dashboard */}
+
+                <Link
+                  href="/dashboard"
+                  onClick={() => setIsOpen(false)}
+                  className="rounded-lg bg-[#1671B9] px-4 py-3 text-sm font-semibold text-white hover:bg-[#0F5F9E]"
+                >
+                  Dashboard
+                </Link>
+
+                {/* Notifications */}
+
+                <Link
+                  href="/dashboard/notifications"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-slate-800 hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200"
+                >
+                  <span className="flex items-center gap-3">
+                    <Bell size={18} />
+                    Notifications
+                  </span>
+
+                  {unreadCount > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </Link>
+
+                {/* Profile */}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    router.push("/dashboard/profile");
+                  }}
+                  className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-800 hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200"
+                >
+                  <UserIcon size={18} />
+                  Profile
+                </button>
+
+                {/* Settings */}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    router.push("/dashboard/settings");
+                  }}
+                  className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-800 hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200"
+                >
+                  <Settings size={18} />
+                  Settings
+                </button>
+
+                {/* Logout */}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    handleLogout();
+                  }}
+                  className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20"
+                >
+                  <LogOut size={18} />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="my-2 border-t border-slate-200 dark:border-slate-700" />
+
+                {/* Login */}
+
+                <Link
+                  href="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="rounded-lg px-4 py-3 text-sm font-medium text-slate-800 hover:bg-blue-50 hover:text-[#1671B9] dark:text-slate-200"
+                >
+                  Login
+                </Link>
+
+                {/* Sign Up */}
+
+                <Link
+                  href="/register"
+                  onClick={() => setIsOpen(false)}
+                  className="rounded-lg bg-[#1671B9] px-4 py-3 text-center text-sm font-semibold text-white hover:bg-[#0F5F9E]"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

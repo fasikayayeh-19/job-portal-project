@@ -8,12 +8,14 @@ import { Application } from './entities/application.entity';
 import { Job } from '../jobs/entities/job.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { MailModule } from '../mail/mail.module';
+import { User } from '../users/entities/user.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Application,
       Job,
+      User,
     ]),
     NotificationsModule,
     

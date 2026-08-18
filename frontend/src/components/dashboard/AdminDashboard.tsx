@@ -16,7 +16,7 @@ export default function AdminDashboard({
   user,
 }: AdminDashboardProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pl-2.5">
 
       {/* =================================================
           Dashboard Toolbar
