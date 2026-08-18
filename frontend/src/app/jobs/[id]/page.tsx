@@ -1,8 +1,9 @@
-'use client';
 
-import { useState ,useEffect} from 'react';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   ArrowLeft,
@@ -12,23 +13,20 @@ import {
   CalendarDays,
   CheckCircle2,
   MapPin,
-} from 'lucide-react';
+} from "lucide-react";
 
-import { useJob } from '@/hooks/useJobs';
+import { useJob } from "@/hooks/useJobs";
 
 import {
   useSavedJobs,
   useSaveJob,
   useRemoveSavedJob,
-} from '@/hooks/useSavedJobs';
+} from "@/hooks/useSavedJobs";
 
-import {
-  useMyApplications,
-  useApplyJob,
-} from '@/hooks/useMyApplications';
+import { useMyApplications, useApplyJob } from "@/hooks/useMyApplications";
 
-const BLUE = '#1671B9';
-const TEAL = '#49BE8C';
+const BLUE = "#1671B9";
+const TEAL = "#49BE8C";
 
 export default function JobDetailPage() {
   const params = useParams();
@@ -36,45 +34,32 @@ export default function JobDetailPage() {
 
   const jobId = String(params.id);
 
-  const {
-    data: job,
-    isLoading,
-    isError,
-  } = useJob(jobId);
+  const { data: job, isLoading, isError } = useJob(jobId);
 
-  const { data: savedJobs = [] } =
-    useSavedJobs();
+  const { data: savedJobs = [] } = useSavedJobs();
 
   const saveMutation = useSaveJob();
   const removeMutation = useRemoveSavedJob();
 
   const applyJob = useApplyJob();
 
-  const [currentUser, setCurrentUser] =
-    useState<any>(null);
-    const [showApplicationForm, setShowApplicationForm] =
-  useState(false);
-
-const [coverLetter, setCoverLetter] =
-  useState('');
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const [coverLetter, setCoverLetter] = useState("");
 
   useEffect(() => {
-    const storedUser =
-      localStorage.getItem('user');
+    const storedUser = localStorage.getItem("user");
 
     if (storedUser) {
       try {
-        setCurrentUser(
-          JSON.parse(storedUser),
-        );
+        setCurrentUser(JSON.parse(storedUser));
       } catch {
         setCurrentUser(null);
       }
     }
   }, []);
 
-  const isJobSeeker =
-    currentUser?.role === 'JOB_SEEKER';
+  const isJobSeeker = currentUser?.role === "JOB_SEEKER";
 
   const {
     data: applications = [],
@@ -83,35 +68,43 @@ const [coverLetter, setCoverLetter] =
 
   const alreadyApplied = job
     ? applications.some(
-        (application) =>
-          application.job?.id === job.id,
+        (application) => application.job?.id === job.id
       )
     : false;
 
-  
+  /* =====================================================
+     LOADING
+  ===================================================== */
+
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-slate-50">
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <div className="mx-auto max-w-6xl px-4 py-10">
-          <div className="animate-pulse rounded-2xl bg-white p-8 shadow-sm">
-            <div className="h-8 w-2/3 rounded bg-slate-200" />
-            <div className="mt-4 h-4 w-1/3 rounded bg-slate-200" />
-            <div className="mt-8 h-32 rounded bg-slate-200" />
+          <div className="animate-pulse rounded-2xl bg-white p-8 shadow-sm dark:bg-slate-900">
+            <div className="h-8 w-2/3 rounded bg-slate-200 dark:bg-slate-800" />
+
+            <div className="mt-4 h-4 w-1/3 rounded bg-slate-200 dark:bg-slate-800" />
+
+            <div className="mt-8 h-32 rounded bg-slate-200 dark:bg-slate-800" />
           </div>
         </div>
       </main>
     );
   }
 
+  /* =====================================================
+     ERROR
+  ===================================================== */
+
   if (isError || !job) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-        <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
-          <h1 className="text-xl font-bold text-slate-900">
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-950">
+        <div className="rounded-2xl bg-white p-10 text-center shadow-sm dark:border dark:border-slate-800 dark:bg-slate-900">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">
             Job not found
           </h1>
 
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             This job may have been closed or removed.
           </p>
 
@@ -130,53 +123,47 @@ const [coverLetter, setCoverLetter] =
   }
 
   const isSaved = savedJobs.some(
-    (saved) => saved.job.id === job.id,
+    (saved) => saved.job.id === job.id
   );
 
   const companyName =
-    job.company?.companyName || 'Company';
+    job.company?.companyName || "Company";
 
-  const logo =
-    job.company?.logoUrl ||
-    job.company?.profileImageUrl;
-const handleApply = () => {
-  if (!currentUser) {
-    router.push('/login');
-    return;
-  }
+  const handleApply = () => {
+    if (!currentUser) {
+      router.push("/login");
+      return;
+    }
 
-  if (!isJobSeeker) {
-    return;
-  }
+    if (!isJobSeeker) {
+      return;
+    }
 
-  if (alreadyApplied) {
-    return;
-  }
+    if (alreadyApplied) {
+      return;
+    }
 
-  setShowApplicationForm(true);
-};
+    setShowApplicationForm(true);
+  };
 
+  const handleSubmitApplication = () => {
+    if (!currentUser || !isJobSeeker || alreadyApplied) {
+      return;
+    }
 
-
-const handleSubmitApplication = () => {
-  if (!currentUser || !isJobSeeker || alreadyApplied) {
-    return;
-  }
-
-  applyJob.mutate(
-    {
-      jobId: job.id,
-      coverLetter: coverLetter.trim(),
-    },
-    {
-      onSuccess: () => {
-        setShowApplicationForm(false);
-        setCoverLetter('');
+    applyJob.mutate(
+      {
+        jobId: job.id,
+        coverLetter: coverLetter.trim(),
       },
-    },
-  );
-};
-
+      {
+        onSuccess: () => {
+          setShowApplicationForm(false);
+          setCoverLetter("");
+        },
+      }
+    );
+  };
 
   const handleSave = () => {
     if (isSaved) {
@@ -187,15 +174,17 @@ const handleSubmitApplication = () => {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
 
-      {/* HEADER */}
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
 
       <section
-        className="border-b"
+        className="border-b border-transparent dark:border-slate-800"
         style={{
           background:
-            'linear-gradient(135deg, #006CA4 0%, #087FA4 55%, #0CABAE 100%)',
+            "linear-gradient(135deg, #006CA4 0%, #087FA4 55%, #0CABAE 100%)",
         }}
       >
         <div className="mx-auto max-w-6xl px-4 py-7 sm:px-6">
@@ -211,14 +200,14 @@ const handleSubmitApplication = () => {
           <div className="mt-6 flex items-center gap-5">
 
             <CompanyLogo
-  logo={
-    job.company?.logoUrl ||
-    job.company?.profileImageUrl
-  }
-  companyName={
-    job.company?.companyName || 'Company'
-  }
-/>
+              logo={
+                job.company?.logoUrl ||
+                job.company?.profileImageUrl
+              }
+              companyName={
+                job.company?.companyName || "Company"
+              }
+            />
 
             <div className="min-w-0">
 
@@ -241,21 +230,25 @@ const handleSubmitApplication = () => {
         </div>
       </section>
 
-      {/* CONTENT */}
+      {/* =====================================================
+          CONTENT
+      ===================================================== */}
 
       <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
 
         <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_320px]">
 
-          {/* LEFT */}
+          {/* =================================================
+              LEFT
+          ================================================= */}
 
           <div className="space-y-6">
 
             {/* OVERVIEW */}
 
-            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
 
-              <h2 className="text-lg font-bold text-slate-900">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                 Job Overview
               </h2>
 
@@ -276,7 +269,7 @@ const handleSubmitApplication = () => {
                 <InfoItem
                   icon={<CheckCircle2 size={18} />}
                   label="Experience"
-                  value={job.experience || 'Not specified'}
+                  value={job.experience || "Not specified"}
                 />
 
                 <InfoItem
@@ -285,9 +278,9 @@ const handleSubmitApplication = () => {
                   value={
                     job.deadline
                       ? new Date(
-                          job.deadline,
+                          job.deadline
                         ).toLocaleDateString()
-                      : 'Open until filled'
+                      : "Open until filled"
                   }
                 />
 
@@ -297,7 +290,7 @@ const handleSubmitApplication = () => {
             {/* DESCRIPTION */}
 
             <ContentSection title="Job Description">
-              <p className="whitespace-pre-line text-sm leading-7 text-slate-600">
+              <p className="whitespace-pre-line text-sm leading-7 text-slate-600 dark:text-slate-300">
                 {job.description}
               </p>
             </ContentSection>
@@ -306,7 +299,7 @@ const handleSubmitApplication = () => {
 
             {job.requirements && (
               <ContentSection title="Requirements">
-                <p className="whitespace-pre-line text-sm leading-7 text-slate-600">
+                <p className="whitespace-pre-line text-sm leading-7 text-slate-600 dark:text-slate-300">
                   {job.requirements}
                 </p>
               </ContentSection>
@@ -314,269 +307,286 @@ const handleSubmitApplication = () => {
 
             {/* SKILLS */}
 
-            {job.skills &&
-              job.skills.length > 0 && (
-                <ContentSection title="Required Skills">
-                  <div className="flex flex-wrap gap-2">
-                    {job.skills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="rounded-lg px-3 py-2 text-sm font-medium"
-                        style={{
-                          backgroundColor: `${TEAL}15`,
-                          color: '#16805E',
-                        }}
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </ContentSection>
-              )}
+            {job.skills && job.skills.length > 0 && (
+              <ContentSection title="Required Skills">
 
+                <div className="flex flex-wrap gap-2">
+
+                  {job.skills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="rounded-lg px-3 py-2 text-sm font-medium dark:bg-emerald-950/40"
+                      style={{
+                        backgroundColor: `${TEAL}15`,
+                        color: "#16805E",
+                      }}
+                    >
+                      {skill}
+                    </span>
+                  ))}
+
+                </div>
+
+              </ContentSection>
+            )}
           </div>
 
-          {/* RIGHT */}
+          {/* =================================================
+              RIGHT
+          ================================================= */}
 
-      
-<aside>
-  <div className="sticky top-24 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+          <aside>
 
-    <div className="flex items-center justify-between">
+            <div className="sticky top-24 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
 
-      <p className="text-sm font-medium text-slate-500">
-        Apply for this position
-      </p>
+              <div className="flex items-center justify-between">
 
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={
-          saveMutation.isPending ||
-          removeMutation.isPending
-        }
-        className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 transition hover:bg-slate-50"
-        style={{
-          color: isSaved ? BLUE : '#64748b',
-        }}
-      >
-        {isSaved ? (
-          <BookmarkCheck size={19} />
-        ) : (
-          <Bookmark size={19} />
-        )}
-      </button>
-
-    </div>
-
-    {/* Salary */}
-    {job.salary && (
-      <div className="mt-5 rounded-xl bg-slate-50 p-4">
-        <p className="text-xs text-slate-400">
-          Salary
-        </p>
-
-        <p
-          className="mt-1 text-lg font-bold"
-          style={{
-            color: TEAL,
-          }}
-        >
-          {job.salary}
-        </p>
-      </div>
-    )}
-
-    {/* Apply Button */}
-    <button
-      type="button"
-      onClick={handleApply}
-      disabled={
-        applyJob.isPending ||
-        applicationsLoading ||
-        alreadyApplied ||
-        (!!currentUser && !isJobSeeker)
-      }
-      className={`mt-5 w-full rounded-xl px-6 py-3 text-sm font-semibold transition ${
-        alreadyApplied
-          ? 'cursor-not-allowed bg-green-100 text-green-700'
-          : 'bg-[#1671B9] text-white hover:bg-[#0F5F9E] disabled:cursor-not-allowed disabled:opacity-50'
-      }`}
-    >
-      {applyJob.isPending
-        ? 'Applying...'
-        : alreadyApplied
-          ? '✓ Applied'
-          : 'Apply Now'}
-    </button>
-
-    {/* ================================================= */}
-    {/* APPLICATION FORM */}
-    {/* ================================================= */}
-
-    {showApplicationForm && !alreadyApplied && (
-      <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-
-        <h3 className="text-base font-bold text-slate-900">
-          Apply for {job.title}
-        </h3>
-
-        <p className="mt-1 text-xs leading-5 text-slate-500">
-          Your profile resume will automatically be attached
-          to this application.
-        </p>
-
-        {/* Resume */}
-        <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-
-          <p className="text-xs font-medium text-slate-400">
-            Resume
-          </p>
-
-          {currentUser?.resumeUrl ? (
-            <div className="mt-2 flex items-center justify-between gap-3">
-
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-slate-700">
-                  {currentUser.resumeFileName ||
-                    'Profile Resume'}
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                  Apply for this position
                 </p>
 
-                <p className="mt-1 text-xs text-green-600">
-                  Resume ready
-                </p>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={
+                    saveMutation.isPending ||
+                    removeMutation.isPending
+                  }
+                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 transition hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                  style={{
+                    color: isSaved ? BLUE : "#64748b",
+                  }}
+                >
+                  {isSaved ? (
+                    <BookmarkCheck size={19} />
+                  ) : (
+                    <Bookmark size={19} />
+                  )}
+                </button>
+
               </div>
 
-              <a
-                href={
-                  currentUser.resumeUrl.startsWith('http')
-                    ? currentUser.resumeUrl
-                    : `http://localhost:3000${currentUser.resumeUrl}`
+              {/* SALARY */}
+
+              {job.salary && (
+                <div className="mt-5 rounded-xl bg-slate-50 p-4 dark:bg-slate-800/70">
+
+                  <p className="text-xs text-slate-400">
+                    Salary
+                  </p>
+
+                  <p
+                    className="mt-1 text-lg font-bold"
+                    style={{
+                      color: TEAL,
+                    }}
+                  >
+                    {job.salary}
+                  </p>
+
+                </div>
+              )}
+
+              {/* APPLY BUTTON */}
+
+              <button
+                type="button"
+                onClick={handleApply}
+                disabled={
+                  applyJob.isPending ||
+                  applicationsLoading ||
+                  alreadyApplied ||
+                  (!!currentUser && !isJobSeeker)
                 }
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 text-xs font-semibold text-[#1671B9] hover:underline"
+                className={`mt-5 w-full rounded-xl px-6 py-3 text-sm font-semibold transition ${
+                  alreadyApplied
+                    ? "cursor-not-allowed bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400"
+                    : "bg-[#1671B9] text-white hover:bg-[#0F5F9E] disabled:cursor-not-allowed disabled:opacity-50"
+                }`}
               >
-                View
-              </a>
+                {applyJob.isPending
+                  ? "Applying..."
+                  : alreadyApplied
+                  ? "✓ Applied"
+                  : "Apply Now"}
+              </button>
+
+              {/* =================================================
+                  APPLICATION FORM
+              ================================================= */}
+
+              {showApplicationForm && !alreadyApplied && (
+                <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
+
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    Apply for {job.title}
+                  </h3>
+
+                  <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                    Your profile resume will automatically be
+                    attached to this application.
+                  </p>
+
+                  {/* RESUME */}
+
+                  <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+
+                    <p className="text-xs font-medium text-slate-400">
+                      Resume
+                    </p>
+
+                    {currentUser?.resumeUrl ? (
+                      <div className="mt-2 flex items-center justify-between gap-3">
+
+                        <div className="min-w-0">
+
+                          <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">
+                            {currentUser.resumeFileName ||
+                              "Profile Resume"}
+                          </p>
+
+                          <p className="mt-1 text-xs text-green-600 dark:text-green-400">
+                            Resume ready
+                          </p>
+
+                        </div>
+
+                        <a
+                          href={
+                            currentUser.resumeUrl.startsWith(
+                              "http"
+                            )
+                              ? currentUser.resumeUrl
+                              : `http://localhost:3000${currentUser.resumeUrl}`
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 text-xs font-semibold text-[#1671B9] hover:underline"
+                        >
+                          View
+                        </a>
+
+                      </div>
+                    ) : (
+                      <div className="mt-2">
+
+                        <p className="text-sm text-red-500 dark:text-red-400">
+                          No resume uploaded.
+                        </p>
+
+                        <Link
+                          href="/dashboard/profile"
+                          className="mt-2 inline-block text-xs font-semibold text-[#1671B9] hover:underline"
+                        >
+                          Upload resume in your profile →
+                        </Link>
+
+                      </div>
+                    )}
+                  </div>
+
+                  {/* COVER LETTER */}
+
+                  <div className="mt-4">
+
+                    <label
+                      htmlFor="coverLetter"
+                      className="text-sm font-medium text-slate-700 dark:text-slate-200"
+                    >
+                      Cover Letter
+
+                      <span className="ml-1 text-xs font-normal text-slate-400">
+                        (optional)
+                      </span>
+                    </label>
+
+                    <textarea
+                      id="coverLetter"
+                      value={coverLetter}
+                      onChange={(event) =>
+                        setCoverLetter(event.target.value)
+                      }
+                      placeholder="Tell the company why you are a good fit for this position..."
+                      rows={6}
+                      maxLength={2000}
+                      className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#1671B9] focus:ring-2 focus:ring-[#1671B9]/10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-500"
+                    />
+
+                    <p className="mt-1 text-right text-xs text-slate-400">
+                      {coverLetter.length}/2000
+                    </p>
+
+                  </div>
+
+                  {/* FORM ACTIONS */}
+
+                  <div className="mt-4 flex gap-3">
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowApplicationForm(false);
+                        setCoverLetter("");
+                      }}
+                      disabled={applyJob.isPending}
+                      className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleSubmitApplication}
+                      disabled={
+                        applyJob.isPending ||
+                        !currentUser?.resumeUrl
+                      }
+                      className="flex-1 rounded-xl bg-[#1671B9] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#0F5F9E] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {applyJob.isPending
+                        ? "Submitting..."
+                        : "Submit"}
+                    </button>
+
+                  </div>
+                </div>
+              )}
+
+              {/* HELPER TEXT */}
+
+              {!showApplicationForm && !alreadyApplied && (
+                <p className="mt-4 text-center text-xs leading-5 text-slate-400">
+                  Sign in as a job seeker to apply for this position.
+                </p>
+              )}
+
+              {/* POSTED */}
+
+              <div className="mt-5 border-t border-slate-100 pt-5 dark:border-slate-800">
+
+                <p className="text-xs text-slate-400">
+                  Posted
+                </p>
+
+                <p className="mt-1 text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {formatPostedDate(
+                    new Date(job.createdAt)
+                  )}
+                </p>
+
+              </div>
 
             </div>
-          ) : (
-            <div className="mt-2">
-
-              <p className="text-sm text-red-500">
-                No resume uploaded.
-              </p>
-
-              <Link
-                href="/dashboard/profile"
-                className="mt-2 inline-block text-xs font-semibold text-[#1671B9] hover:underline"
-              >
-                Upload resume in your profile →
-              </Link>
-
-            </div>
-          )}
-
-        </div>
-
-        {/* Cover Letter */}
-        <div className="mt-4">
-
-          <label
-            htmlFor="coverLetter"
-            className="text-sm font-medium text-slate-700"
-          >
-            Cover Letter
-            <span className="ml-1 text-xs font-normal text-slate-400">
-              (optional)
-            </span>
-          </label>
-
-          <textarea
-            id="coverLetter"
-            value={coverLetter}
-            onChange={(event) =>
-              setCoverLetter(event.target.value)
-            }
-            placeholder="Tell the company why you are a good fit for this position..."
-            rows={6}
-            maxLength={2000}
-            className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#1671B9] focus:ring-2 focus:ring-[#1671B9]/10"
-          />
-
-          <p className="mt-1 text-right text-xs text-slate-400">
-            {coverLetter.length}/2000
-          </p>
-
-        </div>
-
-        {/* Form Actions */}
-        <div className="mt-4 flex gap-3">
-
-          <button
-            type="button"
-            onClick={() => {
-              setShowApplicationForm(false);
-              setCoverLetter('');
-            }}
-            disabled={applyJob.isPending}
-            className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 disabled:opacity-50"
-          >
-            Cancel
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSubmitApplication}
-            disabled={
-              applyJob.isPending ||
-              !currentUser?.resumeUrl
-            }
-            className="flex-1 rounded-xl bg-[#1671B9] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#0F5F9E] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {applyJob.isPending
-              ? 'Submitting...'
-              : 'Submit'}
-          </button>
-
-        </div>
-
-      </div>
-    )}
-
-    {/* Helper Text */}
-    {!showApplicationForm && !alreadyApplied && (
-      <p className="mt-4 text-center text-xs leading-5 text-slate-400">
-        Sign in as a job seeker to apply for this position.
-      </p>
-    )}
-
-    {/* Posted */}
-    <div className="mt-5 border-t border-slate-100 pt-5">
-
-      <p className="text-xs text-slate-400">
-        Posted
-      </p>
-
-      <p className="mt-1 text-sm font-medium text-slate-700">
-        {formatPostedDate(
-          new Date(job.createdAt),
-        )}
-      </p>
-
-    </div>
-
-  </div>
-</aside>
-
+          </aside>
         </div>
       </section>
     </main>
   );
 }
 
-
+/* =========================================================
+   COMPANY LOGO
+========================================================= */
 
 function CompanyLogo({
   logo,
@@ -590,7 +600,7 @@ function CompanyLogo({
   if (!logo || failed) {
     return (
       <div
-        className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl font-bold shadow-sm"
+        className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl font-bold shadow-sm dark:bg-slate-100"
         style={{
           color: BLUE,
         }}
@@ -600,12 +610,12 @@ function CompanyLogo({
     );
   }
 
-  const src = logo.startsWith('http')
+  const src = logo.startsWith("http")
     ? logo
     : `http://localhost:3000${logo}`;
 
   return (
-    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-sm">
+    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-sm dark:bg-slate-100">
       <img
         src={src}
         alt={`${companyName} logo`}
@@ -615,6 +625,11 @@ function CompanyLogo({
     </div>
   );
 }
+
+/* =========================================================
+   INFO ITEM
+========================================================= */
+
 function InfoItem({
   icon,
   label,
@@ -638,18 +653,23 @@ function InfoItem({
       </div>
 
       <div>
+
         <p className="text-xs text-slate-400">
           {label}
         </p>
 
-        <p className="mt-1 text-sm font-medium text-slate-800">
+        <p className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-200">
           {value}
         </p>
-      </div>
 
+      </div>
     </div>
   );
 }
+
+/* =========================================================
+   CONTENT SECTION
+========================================================= */
 
 function ContentSection({
   title,
@@ -659,9 +679,9 @@ function ContentSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+    <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
 
-      <h2 className="text-lg font-bold text-slate-900">
+      <h2 className="text-lg font-bold text-slate-900 dark:text-white">
         {title}
       </h2>
 
@@ -673,34 +693,35 @@ function ContentSection({
   );
 }
 
+/* =========================================================
+   HELPERS
+========================================================= */
+
 function formatJobType(value?: string) {
   if (!value) {
-    return 'Not specified';
+    return "Not specified";
   }
 
   return value
     .toLowerCase()
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (letter) =>
-      letter.toUpperCase(),
-    );
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function formatPostedDate(date: Date) {
-  const diff =
-    Date.now() - date.getTime();
+  const diff = Date.now() - date.getTime();
 
   const hours = Math.floor(
-    diff / (1000 * 60 * 60),
+    diff / (1000 * 60 * 60)
   );
 
   if (hours < 1) {
-    return 'Just now';
+    return "Just now";
   }
 
   if (hours < 24) {
     return `${hours} ${
-      hours === 1 ? 'hour' : 'hours'
+      hours === 1 ? "hour" : "hours"
     } ago`;
   }
 
@@ -708,7 +729,7 @@ function formatPostedDate(date: Date) {
 
   if (days < 7) {
     return `${days} ${
-      days === 1 ? 'day' : 'days'
+      days === 1 ? "day" : "days"
     } ago`;
   }
 

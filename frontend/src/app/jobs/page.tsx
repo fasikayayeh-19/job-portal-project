@@ -218,7 +218,7 @@ export default function FindJobsPage() {
     search || categoryId || location || career || jobType || postedWithin;
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* =====================================================
           HERO / SEARCH
       ===================================================== */}
@@ -256,8 +256,7 @@ export default function FindJobsPage() {
                   }
                 }}
                 placeholder="Job title, keywords or industry"
-                className="h-11 w-full bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400 sm:text-base"
-              />
+              className="h-11 w-full bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500 sm:text-base"/>
             </div>
 
             <button
@@ -423,16 +422,14 @@ export default function FindJobsPage() {
           <div className="min-w-0">
             {/* Tabs + Sort */}
 
-            <div className="mb-6 flex items-center justify-between border-b border-slate-200">
-              <div className="flex gap-8">
+           <div className="mb-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">    <div className="flex gap-8">
                 <button
                   type="button"
                   onClick={() => setActiveTab("all")}
                   className={`relative pb-4 text-sm font-semibold transition ${
                     activeTab === "all"
                       ? "text-[#49BE8C]"
-                      : "text-slate-500 hover:text-slate-800"
-                  }`}
+                      : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"  }`}
                 >
                   All Jobs
                   {activeTab === "all" && (
@@ -476,8 +473,7 @@ export default function FindJobsPage() {
                   onChange={(event) =>
                     setSortBy(event.target.value as "date" | "title")
                   }
-                  className="border-0 bg-transparent text-sm font-medium text-slate-600 outline-none"
-                >
+                 className="border-0 bg-transparent text-sm font-medium text-slate-600 outline-none dark:text-slate-300" >
                   <option value="date">Date</option>
 
                   <option value="title">Title</option>
@@ -498,8 +494,7 @@ export default function FindJobsPage() {
             {/* Error */}
 
             {isError && !isLoading && (
-              <div className="rounded-2xl border border-red-200 bg-white p-10 text-center">
-                <h3 className="font-semibold text-slate-800">
+              <div className="rounded-2xl border border-red-200 bg-white p-10 text-center dark:border-red-900/50 dark:bg-slate-900"> <h3 className="font-semibold text-slate-800 dark:text-slate-100">
                   Unable to load jobs
                 </h3>
 
@@ -512,8 +507,7 @@ export default function FindJobsPage() {
             {/* Empty */}
 
             {!isLoading && !isError && displayedJobs.length === 0 && (
-              <div className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center">
-                <div
+             <div className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center dark:border-slate-800 dark:bg-slate-900">   <div
                   className="mx-auto flex h-14 w-14 items-center justify-center rounded-full"
                   style={{
                     backgroundColor: `${TEAL}20`,
@@ -527,8 +521,7 @@ export default function FindJobsPage() {
                   />
                 </div>
 
-                <h3 className="mt-5 text-lg font-semibold text-slate-900">
-                  No jobs found
+                <h3 className="mt-5 text-lg font-semibold text-slate-100 dark:text-slate-100">        No jobs found
                 </h3>
 
                 <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
@@ -582,14 +575,13 @@ export default function FindJobsPage() {
             <div className="sticky top-24 space-y-5">
               {/* Notice card */}
 
-              <div className="rounded-2xl border border-slate-100 bg-white p-7 shadow-sm">
-                <div className="text-3xl">🚀</div>
+              <div className="rounded-2xl border border-slate-100 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">  <div className="text-3xl">🚀</div>
 
-                <h3 className="mt-4 text-xl font-semibold text-slate-900">
+                <h3 className="mt-4 text-xl font-semibold text-slate-900 dark:text-white">
                   Get noticed faster
                 </h3>
 
-                <p className="mt-3 text-sm leading-7 text-slate-500">
+                <p className="mt-3 text-sm leading-7 text-slate-500 dark:text-slate-400">
                   Complete your profile and upload your resume to increase your
                   chances of getting noticed by employers.
                 </p>
@@ -663,9 +655,9 @@ function FilterSelect({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={loading}
-        className={`h-11 min-w-[155px] appearance-none rounded-xl border border-white/50 bg-white/90 px-4 text-sm text-slate-600 shadow-sm outline-none transition hover:bg-white focus:border-[#1671B9] focus:ring-2 focus:ring-[#1671B9]/20 ${
-          icon ? "pl-9" : "pl-4"
-        }`}
+        className={`h-11 min-w-[155px] appearance-none rounded-xl border border-white/50 bg-white/90 px-4 text-sm text-slate-600 shadow-sm outline-none transition hover:bg-white focus:border-[#1671B9] focus:ring-2 focus:ring-[#1671B9]/20 dark:border-slate-700 dark:bg-slate-800/95 dark:text-slate-200 dark:hover:bg-slate-800 ${
+  icon ? "pl-9" : "pl-4"
+}`}
       >
         {loading ? (
           <option value="">Loading...</option>
@@ -694,145 +686,110 @@ function JobCard({ job, isSaved }: { job: Job; isSaved: boolean }) {
 
   return (
     <Link
-  href={`/jobs/${job.id}`}
-  className="mb-5 block rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-7"
->
-  <article>
-    {/* Top */}
-    <div className="flex items-start justify-between gap-4">
-      <div className="flex flex-wrap items-center gap-5 text-sm font-medium">
-        <span style={{ color: TEAL }}>
-          New
-        </span>
+      href={`/jobs/${job.id}`}
+     className="mb-5 block rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/80 sm:p-7" >
+      <article>
+        {/* Top */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-5 text-sm font-medium">
+            <span style={{ color: TEAL }}>New</span>
 
-        {job.salary && (
-          <span
-            className="font-medium"
-            style={{ color: TEAL }}
+            {job.salary && (
+              <span className="font-medium" style={{ color: TEAL }}>
+                Salary Available
+              </span>
+            )}
+
+            <span className="font-medium" style={{ color: BLUE }}>
+              ⚡ Easy Apply
+            </span>
+          </div>
+
+          {/* Save button */}
+          <div
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            }}
           >
-            Salary Available
-          </span>
-        )}
-
-        <span
-          className="font-medium"
-          style={{ color: BLUE }}
-        >
-          ⚡ Easy Apply
-        </span>
-      </div>
-
-      {/* Save button */}
-      <div
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-        }}
-      >
-        <SaveJobButton
-          jobId={job.id}
-          isSaved={isSaved}
-        />
-      </div>
-    </div>
-
-    {/* Main */}
-    <div className="mt-7 grid gap-6 md:grid-cols-[1fr_145px]">
-      <div>
-        {/* Category */}
-        {job.category?.name && (
-          <span className="inline-flex rounded-full bg-slate-100 px-4 py-2 text-xs font-medium text-slate-700">
-            {job.category.name}
-          </span>
-        )}
-
-        {/* Title */}
-        <h2 className="mt-4 text-xl font-bold text-slate-950 transition sm:text-2xl">
-          {job.title}
-        </h2>
-
-        {/* Company */}
-        <p className="mt-2 text-sm text-slate-500">
-          {formatPostedDate(postedDate)}
-
-          <span className="mx-1.5">
-            by
-          </span>
-
-          <span
-            className="font-medium"
-            style={{ color: BLUE }}
-          >
-            {companyName}
-          </span>
-        </p>
-
-        {/* Meta */}
-        <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm text-slate-700">
-          <span className="inline-flex items-center gap-2">
-            <MapPin
-              size={17}
-              className="text-slate-500"
-            />
-            {job.location}
-          </span>
-
-          <span className="inline-flex items-center gap-2">
-            <CalendarDays
-              size={17}
-              className="text-slate-500"
-            />
-
-            {job.deadline
-              ? `Deadline ${new Date(
-                  job.deadline,
-                ).toLocaleDateString()}`
-              : 'Open until filled'}
-          </span>
-
-          <span className="inline-flex items-center gap-2">
-            <BriefcaseBusiness
-              size={17}
-              className="text-slate-500"
-            />
-
-            {formatJobType(job.jobType)}
-          </span>
+            <SaveJobButton jobId={job.id} isSaved={isSaved} />
+          </div>
         </div>
 
-        {/* Description */}
-        <p className="mt-5 line-clamp-3 text-sm leading-7 text-slate-600">
-          {job.description}
-        </p>
+        {/* Main */}
+        <div className="mt-7 grid gap-6 md:grid-cols-[1fr_145px]">
+          <div>
+            {/* Category */}
+            {job.category?.name && (
+              <span className="inline-flex rounded-full bg-slate-100 px-4 py-2 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                {job.category.name}
+              </span>
+            )}
 
-        {/* Skills */}
-        {job.skills &&
-          job.skills.length > 0 && (
-            <div className="mt-5 flex flex-wrap gap-2">
-              {job.skills
-                .slice(0, 5)
-                .map((skill) => (
+            {/* Title */}
+            <h2 className="mt-4 text-xl font-bold text-slate-950 transition dark:text-white sm:text-2xl">
+              {job.title}
+            </h2>
+
+            {/* Company */}
+            <p className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm text-slate-700">
+              {formatPostedDate(postedDate)}
+
+              <span className="mx-1.5">by</span>
+
+              <span className="font-medium" style={{ color: BLUE }}>
+                {companyName}
+              </span>
+            </p>
+
+            {/* Meta */}
+            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm text-slate-700">
+              <span className="inline-flex items-center gap-2">
+                <MapPin size={17} className="text-slate-500" />
+                {job.location}
+              </span>
+
+              <span className="inline-flex items-center gap-2">
+                <CalendarDays size={17} className="text-slate-500" />
+
+                {job.deadline
+                  ? `Deadline ${new Date(job.deadline).toLocaleDateString()}`
+                  : "Open until filled"}
+              </span>
+
+              <span className="inline-flex items-center gap-2">
+                <BriefcaseBusiness size={17} className="text-slate-500" />
+
+                {formatJobType(job.jobType)}
+              </span>
+            </div>
+
+            {/* Description */}
+            <p className="mt-5 line-clamp-3 text-sm leading-7 text-slate-600 dark:text-slate-400">
+              {job.description}
+            </p>
+
+            {/* Skills */}
+            {job.skills && job.skills.length > 0 && (
+              <div className="mt-5 flex flex-wrap gap-2">
+                {job.skills.slice(0, 5).map((skill) => (
                   <span
                     key={skill}
-                    className="rounded-md bg-slate-100 px-2.5 py-1 text-xs text-slate-600"
-                  >
+                   className="rounded-md bg-slate-100 px-2.5 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300"  >
                     {skill}
                   </span>
                 ))}
-            </div>
-          )}
-      </div>
+              </div>
+            )}
+          </div>
 
-      {/* Company Logo */}
-      <div className="flex items-start justify-center md:pt-2">
-        <CompanyLogo
-          logo={logo}
-          companyName={companyName}
-        />
-      </div>
-    </div>
-  </article>
-</Link>
+          {/* Company Logo */}
+          <div className="flex items-start justify-center md:pt-2">
+            <CompanyLogo logo={logo} companyName={companyName} />
+          </div>
+        </div>
+      </article>
+    </Link>
   );
 }
 
@@ -910,8 +867,7 @@ function Pagination({
         type="button"
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
-        className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-[#1671B9] hover:text-[#1671B9] disabled:cursor-not-allowed disabled:opacity-40"
-      >
+        className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-[#1671B9] hover:text-[#1671B9] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
         <ChevronLeft size={18} />
       </button>
 
@@ -964,19 +920,18 @@ function Pagination({
 
 function JobSkeleton() {
   return (
-    <div className="animate-pulse rounded-2xl border border-slate-100 bg-white p-7 shadow-sm">
-      <div className="h-4 w-32 rounded bg-slate-200" />
+   <div className="animate-pulse rounded-2xl border border-slate-100 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">  <div className="h-4 w-32 rounded bg-slate-200" />
 
-      <div className="mt-7 h-7 w-3/4 rounded bg-slate-200" />
+      <div className="mt-7 h-7 w-3/4 rounded bg-slate-200 dark:bg-slate-800" />
 
-      <div className="mt-3 h-4 w-1/2 rounded bg-slate-200" />
+      <div className="mt-3 h-4 w-1/2 rounded bg-slate-200 dark:bg-slate-800" />
 
-      <div className="mt-6 h-4 w-2/3 rounded bg-slate-200" />
+      <div className="mt-6 h-4 w-2/3 rounded bg-slate-200 dark:bg-slate-800" />
 
       <div className="mt-5 space-y-2">
-        <div className="h-4 w-full rounded bg-slate-200" />
+        <div className="h-4 w-full rounded bg-slate-200 dark:bg-slate-800" />
 
-        <div className="h-4 w-5/6 rounded bg-slate-200" />
+        <div className="h-4 w-5/6 rounded bg-slate-200 dark:bg-slate-800" />
       </div>
     </div>
   );
