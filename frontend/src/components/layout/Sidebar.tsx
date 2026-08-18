@@ -17,6 +17,7 @@ import {
   Users,
   ClipboardList,
   Settings,
+  Settings2,
   LogOut,
   X,
   Plus,
@@ -216,6 +217,11 @@ const jobSeekerItems: MenuItem[] = [
       href: '/dashboard/analytics',
       icon: <BarChart3 size={19} />,
     },
+    {
+    label: 'Management',
+    href: '/dashboard/management',
+    icon: <Settings2 size={19} />,
+  },
   ];
 
   /* ==========================================================

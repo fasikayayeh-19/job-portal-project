@@ -661,25 +661,11 @@ useEffect(() => {
                   aria-haspopup="menu"
                   className="flex items-center gap-2 rounded-xl p-1.5 transition hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
-                  <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-                    <div className="flex items-center gap-3">
-                      <ProfileAvatar
-                        user={user}
-                        displayName={displayName}
-                        size="small"
-                      />
-
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-slate-800 dark:text-white">
-                          {displayName}
-                        </p>
-
-                        <p className="mt-1 truncate text-xs text-slate-400">
-                          {user.email}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  <ProfileAvatar
+                    user={user}
+                    displayName={displayName}
+                    size="small"
+                  />
 
                   <ChevronDown
                     size={16}
@@ -707,34 +693,14 @@ useEffect(() => {
                       {/* Account */}
 
                       <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-                        <div className="flex items-center gap-3">
-                          {/* Small profile image */}
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-800 dark:text-white">
+                            {displayName}
+                          </p>
 
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1671B9] text-xs font-bold text-white">
-                            {user.profileImageUrl ? (
-                              <img
-                                src={
-                                  user.profileImageUrl.startsWith("http")
-                                    ? user.profileImageUrl
-                                    : `http://localhost:3000${user.profileImageUrl}`
-                                }
-                                alt={displayName}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              initial
-                            )}
-                          </div>
-
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-slate-800 dark:text-white">
-                              {displayName}
-                            </p>
-
-                            <p className="mt-1 truncate text-xs text-slate-400">
-                              {user.email}
-                            </p>
-                          </div>
+                          <p className="mt-1 truncate text-xs text-slate-400">
+                            {user.email}
+                          </p>
                         </div>
                       </div>
 

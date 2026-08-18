@@ -9,7 +9,7 @@ import { Job } from '../jobs/entities/job.entity';
 import { Application } from '../applications/entities/application.entity';
 import { CompanyStatus } from '../companies/enums/company-status.enum';
 import { User } from '../users/entities/user.entity';
-
+import { ApplicationStatus } from '../applications/enums/application-status.enum';
 @Injectable()
 export class AdminService {
 
@@ -114,6 +114,7 @@ async getCompanies() {
     },
   });
 }
+
 async getDashboardStats() {
   const [
     totalUsers,
@@ -122,7 +123,15 @@ async getDashboardStats() {
     approvedCompanies,
     totalJobs,
     totalApplications,
+
+    applicationStatus,
+    applicationsOverTime,
+    jobsByCategory,
   ] = await Promise.all([
+    // ============================================
+    // BASIC STATISTICS
+    // ============================================
+
     this.userRepository.count(),
 
     this.companyRepository.count(),
@@ -142,6 +151,46 @@ async getDashboardStats() {
     this.jobRepository.count(),
 
     this.applicationRepository.count(),
+
+    // ============================================
+    // APPLICATION STATUS
+    // ============================================
+
+    this.getApplicationStatus(),
+
+    // ============================================
+    // APPLICATIONS OVER TIME
+    // ============================================
+
+    this.applicationRepository
+      .createQueryBuilder('application')
+      .select(
+        "TO_CHAR(DATE_TRUNC('month', application.createdAt), 'YYYY-MM')",
+        'month',
+      )
+      .addSelect('COUNT(application.id)', 'applications')
+      .groupBy(
+        "DATE_TRUNC('month', application.createdAt)",
+      )
+      .orderBy(
+        "DATE_TRUNC('month', application.createdAt)",
+        'ASC',
+      )
+      .getRawMany(),
+
+    // ============================================
+    // JOBS BY CATEGORY
+    // ============================================
+
+    this.jobRepository
+      .createQueryBuilder('job')
+      .leftJoin('job.category', 'category')
+      .select('category.name', 'category')
+      .addSelect('COUNT(job.id)', 'jobs')
+      .where('category.name IS NOT NULL')
+      .groupBy('category.name')
+      .orderBy('COUNT(job.id)', 'DESC')
+      .getRawMany(),
   ]);
 
   return {
@@ -151,6 +200,71 @@ async getDashboardStats() {
     approvedCompanies,
     totalJobs,
     totalApplications,
+
+    applicationStatus,
+
+    companyStatus: {
+      pending: pendingCompanies,
+      approved: approvedCompanies,
+    },
+
+    applicationsOverTime: applicationsOverTime.map((item) => ({
+      month: item.month,
+      applications: Number(item.applications),
+    })),
+
+    jobsByCategory: jobsByCategory.map((item) => ({
+      category: item.category,
+      jobs: Number(item.jobs),
+    })),
+  };
+}
+
+private async getApplicationStatus() {
+  const [
+    pendingReview,
+    test,
+    interview,
+    hired,
+    declined,
+  ] = await Promise.all([
+    this.applicationRepository.count({
+      where: {
+        status: ApplicationStatus.PENDING_REVIEW,
+      },
+    }),
+
+    this.applicationRepository.count({
+      where: {
+        status: ApplicationStatus.TEST,
+      },
+    }),
+
+    this.applicationRepository.count({
+      where: {
+        status: ApplicationStatus.INTERVIEW,
+      },
+    }),
+
+    this.applicationRepository.count({
+      where: {
+        status: ApplicationStatus.HIRED,
+      },
+    }),
+
+    this.applicationRepository.count({
+      where: {
+        status: ApplicationStatus.DECLINED,
+      },
+    }),
+  ]);
+
+  return {
+    pendingReview,
+    test,
+    interview,
+    hired,
+    declined,
   };
 }
 }

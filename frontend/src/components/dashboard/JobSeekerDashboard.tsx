@@ -179,7 +179,7 @@ function RecommendedJobRow({
         </h3>
 
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          {job.company.companyName}
+          {job.company?.companyName ?? 'Company'}
         </p>
 
         <div className="mt-2 flex flex-wrap gap-2">
