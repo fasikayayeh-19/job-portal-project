@@ -1,7 +1,7 @@
 'use client';
 import { useJobs } from '@/hooks/useJobs';
 import type { Job } from '@/services/jobs.service';
-import DashboardToolbar from './DashboardToolbar';
+
 import { useJobSeekerDashboard } from '@/hooks/useJobSeekerDashboard';
 import type {
   RecentApplication,
@@ -45,9 +45,9 @@ export default function JobSeekerDashboard() {
       : user.email;
 
   return (
-    <div className="space-y-6 pl-2">
+    <div className="space-y-6">
 
-      <DashboardToolbar user={user} />
+
 
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">

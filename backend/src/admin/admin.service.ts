@@ -1,60 +1,144 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable,NotFoundException,ForbiddenException } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
+import {
+  FindOptionsWhere,
+  
+  
+} from 'typeorm';
 
+import { NotificationsService } from '../notifications/notifications.service';
+import { MailService } from '../mail/mail.service';
+import { UserRole } from '../users/enums/user-role.enum';
+import { UserStatus } from '../users/enums/user-status.enum';
 import { Company } from '../companies/entities/company.entity';
 import { Job } from '../jobs/entities/job.entity';
 import { Application } from '../applications/entities/application.entity';
 import { CompanyStatus } from '../companies/enums/company-status.enum';
 import { User } from '../users/entities/user.entity';
 import { ApplicationStatus } from '../applications/enums/application-status.enum';
+import { BadRequestException } from '@nestjs/common';
 @Injectable()
 export class AdminService {
 
-  constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
+constructor(
+  @InjectRepository(User)
+  private userRepository: Repository<User>,
 
-    @InjectRepository(Company)
-    private companyRepository: Repository<Company>,
+  @InjectRepository(Company)
+  private companyRepository: Repository<Company>,
 
-    @InjectRepository(Job)
-    private jobRepository: Repository<Job>,
+  @InjectRepository(Job)
+  private jobRepository: Repository<Job>,
 
-    @InjectRepository(Application)
-    private applicationRepository: Repository<Application>,
-  ) {}
+  @InjectRepository(Application)
+  private applicationRepository: Repository<Application>,
+
+  private readonly notificationsService: NotificationsService,
+
+  private readonly mailService: MailService,
+) {}
 
 
 
-  async getUsers() {
-  return this.userRepository.find({
+
+async getUsers(
+  page = 1,
+  limit = 10,
+  role?: UserRole,
+  status?: UserStatus,
+) {
+  const skip = (page - 1) * limit;
+
+  const where: FindOptionsWhere<User> = {};
+
+  if (role) {
+    where.role = role;
+  }
+
+  if (status) {
+    where.status = status;
+  }
+
+  const [users, total] = await this.userRepository.findAndCount({
+    where,
+
     select: {
       id: true,
       firstName: true,
       lastName: true,
       email: true,
       role: true,
+      status: true,
       createdAt: true,
     },
 
     order: {
       createdAt: 'DESC',
     },
+
+    skip,
+    take: limit,
   });
+
+  return {
+    data: users,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
 }
-async getCompanies() {
-  return this.companyRepository.find({
-    relations: {
-      user: true,
-    },
-    order: {
-      createdAt: 'DESC',
-    },
+async blockUser(id: string) {
+  const user = await this.userRepository.findOne({
+    where: { id },
   });
+
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+
+  if (user.status === UserStatus.BLOCKED) {
+    return {
+      message: 'User is already blocked',
+    };
+  }
+
+  await this.userRepository.update(id, {
+    status: UserStatus.BLOCKED,
+  });
+
+  return {
+    message: 'User blocked successfully',
+  };
 }
+
+async unblockUser(id: string) {
+  const user = await this.userRepository.findOne({
+    where: { id },
+  });
+
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+
+  if (user.status === UserStatus.ACTIVE) {
+    return {
+      message: 'User is already active',
+    };
+  }
+
+  await this.userRepository.update(id, {
+    status: UserStatus.ACTIVE,
+  });
+
+  return {
+    message: 'User unblocked successfully',
+  };
+}
+
 
   async getPendingCompanies() {
     return this.companyRepository.find({
@@ -69,25 +153,42 @@ async getCompanies() {
     });
   }
 
-  async approveCompany(id: string) {
-    await this.companyRepository.update(id, {
-      status: CompanyStatus.APPROVED,
-    });
+ async approveCompany(id: string) {
+  const company = await this.companyRepository.findOne({
+    where: { id },
+    relations: {
+      user: true,
+    },
+  });
 
-    return {
-      message: 'Company approved',
-    };
+  if (!company) {
+    throw new NotFoundException('Company not found');
   }
 
-  async rejectCompany(id: string) {
-    await this.companyRepository.update(id, {
-      status: CompanyStatus.REJECTED,
-    });
-
-    return {
-      message: 'Company rejected',
-    };
+  if (company.status !== CompanyStatus.PENDING) {
+    throw new BadRequestException(
+      'Only pending companies can be approved',
+    );
   }
+
+  company.status = CompanyStatus.APPROVED;
+
+  await this.companyRepository.save(company);
+
+  await this.notifyCompanyStatusChange(
+    company,
+    'Company approved',
+    'REJECTED',
+    `Your company "${company.companyName}" has been approved. You can now access your company dashboard and manage your jobs.`,
+  );
+
+  return {
+    message: 'Company approved successfully',
+  };
+}
+
+
+
 
   async getApplications() {
   return this.applicationRepository.find({
@@ -267,4 +368,221 @@ private async getApplicationStatus() {
     declined,
   };
 }
+  
+async deleteUser(id: string, currentAdminId: string) {
+  if (id === currentAdminId) {
+    throw new ForbiddenException(
+      'You cannot delete your own admin account',
+    );
+  }
+
+  const user = await this.userRepository.findOne({
+    where: { id },
+  });
+
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+
+  await this.userRepository.delete(id);
+
+  return {
+    message: 'User deleted successfully',
+  };
 }
+async getCompanies(
+  page = 1,
+  limit = 10,
+  status?: CompanyStatus,
+  search?: string,
+) {
+  const skip = (page - 1) * limit;
+
+  const query = this.companyRepository
+    .createQueryBuilder('company')
+    .leftJoinAndSelect('company.user', 'user')
+    .orderBy('company.createdAt', 'DESC')
+    .skip(skip)
+    .take(limit);
+
+  if (status) {
+    query.andWhere('company.status = :status', { status });
+  }
+
+  if (search) {
+    query.andWhere(
+      '(LOWER(company.companyName) LIKE LOWER(:search) OR LOWER(company.location) LIKE LOWER(:search))',
+      {
+        search: `%${search}%`,
+      },
+    );
+  }
+
+  const [companies, total] = await query.getManyAndCount();
+
+  return {
+    data: companies,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
+}
+
+
+async suspendCompany(id: string) {
+  const company = await this.companyRepository.findOne({
+    where: { id },
+    relations: {
+      user: true,
+    },
+  });
+
+  if (!company) {
+    throw new NotFoundException('Company not found');
+  }
+
+  if (company.status !== CompanyStatus.APPROVED) {
+    throw new BadRequestException(
+      'Only approved companies can be suspended',
+    );
+  }
+
+  company.status = CompanyStatus.SUSPENDED;
+
+  await this.companyRepository.save(company);
+
+  await this.notifyCompanyStatusChange(
+    company,
+    'Company suspended',
+    'SUSPENDED',
+    `Your company "${company.companyName}" has been suspended by the administrator.`,
+  );
+
+  return {
+    message: 'Company suspended successfully',
+  };
+}
+
+async deleteCompanyAccount(userId: string) {
+  const user = await this.userRepository.findOne({
+    where: {
+      id: userId,
+      role: UserRole.COMPANY,
+    },
+    relations: {
+      company: true,
+    },
+  });
+
+  if (!user) {
+    throw new NotFoundException('Company user not found');
+  }
+
+  await this.userRepository.delete(userId);
+
+  return {
+    message: 'Company account and related data deleted successfully',
+  };
+}
+
+
+
+async activateCompany(id: string) {
+  const company = await this.companyRepository.findOne({
+    where: { id },
+    relations: {
+      user: true,
+    },
+  });
+
+  if (!company) {
+    throw new NotFoundException('Company not found');
+  }
+
+  if (company.status !== CompanyStatus.SUSPENDED) {
+    throw new BadRequestException(
+      'Only suspended companies can be activated',
+    );
+  }
+
+  company.status = CompanyStatus.APPROVED;
+
+  await this.companyRepository.save(company);
+
+  await this.notifyCompanyStatusChange(
+    company,
+    'Company account restored',
+    'APPROVED',
+    `Your company "${company.companyName}" has been restored and can now use the platform again.`,
+  );
+
+  return {
+    message: 'Company activated successfully',
+  };
+}
+
+  async rejectCompany(id: string) {
+  const company = await this.companyRepository.findOne({
+    where: { id },
+    relations: {
+      user: true,
+    },
+  });
+
+  if (!company) {
+    throw new NotFoundException('Company not found');
+  }
+
+  if (company.status !== CompanyStatus.PENDING) {
+    throw new BadRequestException(
+      'Only pending companies can be rejected',
+    );
+  }
+
+  company.status = CompanyStatus.REJECTED;
+
+  await this.companyRepository.save(company);
+
+  await this.notifyCompanyStatusChange(
+    company,
+    'Company registration rejected',
+    'REJECTED',
+    `Your company "${company.companyName}" registration has been rejected. Please contact support if you need more information.`,
+  );
+
+  return {
+    message: 'Company rejected successfully',
+  };
+
+
+
+}
+
+private async notifyCompanyStatusChange(
+  company: Company,
+  title: string,
+  status: string,
+  message: string,
+) {
+  if (!company.user) {
+    return;
+  }
+
+  await this.notificationsService.create(
+    company.user.id,
+    title,
+    message,
+  );
+
+  await this.mailService.sendCompanyStatusEmail(
+    company.user.email,
+    company.companyName,
+    status,
+    message,
+  );
+}
+
+}
+
+

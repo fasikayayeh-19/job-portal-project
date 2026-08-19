@@ -1,6 +1,6 @@
 "use client";
 
-import DashboardToolbar from "./DashboardToolbar";
+
 import {
   BriefcaseBusiness,
   Users,
@@ -98,7 +98,7 @@ export default function CompanyDashboard({ user }: CompanyDashboardProps) {
           Dashboard Toolbar
       ================================================== */}
 
-      <DashboardToolbar user={user} />
+
 
       {/* =================================================
           Dashboard Header

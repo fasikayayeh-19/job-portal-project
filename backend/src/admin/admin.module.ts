@@ -9,6 +9,8 @@ import { Company } from '../companies/entities/company.entity';
 import { Job } from '../jobs/entities/job.entity';
 import { Application } from '../applications/entities/application.entity';
 
+import { NotificationsModule } from '../notifications/notifications.module';
+import { MailModule } from '../mail/mail.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -17,6 +19,8 @@ import { Application } from '../applications/entities/application.entity';
       Job,
       Application,
     ]),
+    NotificationsModule,
+    MailModule,
   ],
 
   controllers: [

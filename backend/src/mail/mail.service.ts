@@ -181,4 +181,165 @@ export class MailService {
     const base = `Application Status Update: ${status}`;
     return jobTitle ? `${base} - ${jobTitle}` : base;
   }
+
+  async sendCompanyStatusEmail(
+  email: string,
+  companyName: string,
+  status: string,
+  message: string,
+) {
+  const appBaseUrl =
+    process.env.APP_BASE_URL || 'http://localhost:3000';
+
+  const loginLink = `${appBaseUrl}/login`;
+
+  const statusColors: Record<string, string> = {
+    APPROVED: '#16a34a',
+    REJECTED: '#dc2626',
+    SUSPENDED: '#ea580c',
+  };
+
+  const statusColor =
+    statusColors[status] || '#2a7de1';
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Company Status Update</title>
+</head>
+
+<body style="margin:0;padding:0;background:#f4f7fc;font-family:Arial,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0"
+    style="padding:40px 0;background:#f4f7fc;">
+
+    <tr>
+      <td align="center">
+
+        <table width="600" cellpadding="0" cellspacing="0"
+          style="max-width:600px;width:100%;background:white;border-radius:12px;overflow:hidden;">
+
+          <tr>
+            <td style="background:#1a3b5d;padding:28px 30px;">
+              <h1 style="margin:0;color:white;font-size:22px;">
+                Job Portal
+              </h1>
+
+              <p style="margin:5px 0 0;color:#dbeafe;">
+                Company Account Update
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:32px 30px;">
+
+              <p style="font-size:16px;color:#1e2a3a;">
+                Hello,
+              </p>
+
+              <p style="font-size:16px;color:#1e2a3a;line-height:1.6;">
+                There has been an update to your company account:
+                <strong>${companyName}</strong>
+              </p>
+
+              <div style="
+                margin:24px 0;
+                padding:18px;
+                border-left:5px solid ${statusColor};
+                background:#f8fafc;
+                border-radius:8px;
+              ">
+
+                <p style="
+                  margin:0;
+                  font-size:13px;
+                  color:#64748b;
+                  text-transform:uppercase;
+                ">
+                  Current Status
+                </p>
+
+                <p style="
+                  margin:8px 0 0;
+                  font-size:22px;
+                  font-weight:bold;
+                  color:${statusColor};
+                ">
+                  ${status}
+                </p>
+
+              </div>
+
+              <p style="
+                font-size:15px;
+                color:#475569;
+                line-height:1.6;
+              ">
+                ${message}
+              </p>
+
+              <div style="margin:28px 0;">
+                <a
+                  href="${loginLink}"
+                  style="
+                    display:inline-block;
+                    background:#2a7de1;
+                    color:white;
+                    text-decoration:none;
+                    padding:14px 30px;
+                    border-radius:8px;
+                    font-weight:600;
+                  "
+                >
+                  Log In to Your Account
+                </a>
+              </div>
+
+              <p style="
+                font-size:14px;
+                color:#64748b;
+                line-height:1.6;
+              ">
+                If you have questions about this decision,
+                please contact the platform administrator.
+              </p>
+
+            </td>
+          </tr>
+
+          <tr>
+            <td style="
+              background:#f8fafc;
+              padding:20px 30px;
+              text-align:center;
+              border-top:1px solid #e2e8f0;
+            ">
+              <p style="margin:0;color:#64748b;font-size:13px;">
+                © ${new Date().getFullYear()} Job Portal.
+                All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+
+  </table>
+
+</body>
+</html>
+  `;
+
+  await this.mailerService.sendMail({
+    to: email,
+    subject: `Company Status Update: ${status}`,
+    html: htmlContent,
+  });
+}
 }

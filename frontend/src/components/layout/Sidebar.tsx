@@ -8,7 +8,6 @@ import { getCurrentUser } from '@/lib/auth';
 
 import {
   LayoutDashboard,
-  UserRound,
   Search,
   BriefcaseBusiness,
   Bookmark,
@@ -24,6 +23,8 @@ import {
   ShieldCheck,
   BarChart3,
   UserCircle,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react';
 
 type UserRole = 'JOB_SEEKER' | 'COMPANY' | 'ADMIN';
@@ -55,6 +56,8 @@ interface SidebarProps {
   user: SidebarUser;
   isOpen: boolean;
   onClose: () => void;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
 interface MenuItem {
@@ -72,6 +75,8 @@ export default function Sidebar({
   user,
   isOpen,
   onClose,
+  collapsed,
+  onToggleCollapse,
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -317,306 +322,154 @@ const jobSeekerItems: MenuItem[] = [
 
       <aside
         className={`
-          fixed
-          left-0
-          top-0
-          z-50
-          flex
-          h-screen
-          w-64
-          flex-col
-          bg-[#1671B9]
-          text-white
-          shadow-xl
-          transition-transform
-          duration-300
-          ease-in-out
-
-          md:translate-x-0
-
-          ${
-            isOpen
-              ? 'translate-x-0'
-              : '-translate-x-full'
-          }
+          fixed left-0 z-50 flex flex-col
+          bg-[#1671B9] text-white shadow-xl
+          transition-all duration-300 ease-in-out
+          ${collapsed ? 'w-16' : 'w-64'}
+          ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          top-0 h-screen
         `}
       >
         {/* ====================================================
             HEADER
         ==================================================== */}
 
-        <div
-          className="
-            flex
-            h-16
-            shrink-0
-            items-center
-            justify-between
-            border-b
-            border-white/15
-            px-5
-          "
-        >
+        <div className="flex h-16 shrink-0 items-center border-b border-white/15 px-3">
           <Link
             href="/dashboard"
             onClick={onClose}
-            className="
-              text-xl
-              font-bold
-              tracking-tight
-              text-white
-              transition-opacity
-              hover:opacity-90
-            "
+            className="flex min-w-0 items-center gap-2 text-xl font-bold tracking-tight text-white transition-opacity hover:opacity-90"
           >
-            Job Portal
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/20 text-sm font-bold">
+              JP
+            </div>
+            {!collapsed && (
+              <span className="truncate">Job Portal</span>
+            )}
           </Link>
 
-          {/* Mobile close button */}
+          <div className="ml-auto flex items-center gap-1">
+            {/* Collapse toggle — desktop only */}
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className="hidden rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white md:flex"
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {collapsed ? <ChevronsRight size={20} /> : <ChevronsLeft size={20} />}
+            </button>
 
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close dashboard menu"
-            className="
-              rounded-lg
-              p-2
-              text-white/80
-              transition
-              hover:bg-white/10
-              hover:text-white
-              md:hidden
-            "
-          >
-            <X size={20} />
-          </button>
+            {/* Mobile close button */}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close dashboard menu"
+              className="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white md:hidden"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* ====================================================
             USER INFORMATION
         ==================================================== */}
 
-       <div
-  className="
-    shrink-0
-    border-b
-    border-white/15
-    px-5
-    py-5
-  "
->
-  <div className="mb-3 flex items-center gap-3">
+        <div className="shrink-0 border-b border-white/15 px-3 py-4">
+          <div className="flex items-center gap-3">
+            {/* Avatar */}
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20 text-white ring-2 ring-white/20">
+              {currentUser.profileImageUrl ? (
+                <img
+                  src={`http://localhost:3000${currentUser.profileImageUrl}`}
+                  alt={`${displayName} profile`}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-sm font-bold">
+                  {displayName.charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
 
-    {/* Avatar */}
-    <div
-      className="
-        flex
-        h-11
-        w-11
-        shrink-0
-        items-center
-        justify-center
-        overflow-hidden
-        rounded-full
-        bg-white/20
-        text-white
-        ring-2
-        ring-white/20
-      "
-    >
-      {currentUser.profileImageUrl ? (
-        <img
-          src={`http://localhost:3000${currentUser.profileImageUrl}`}
-          alt={`${displayName} profile`}
-          className="h-full w-full object-cover"
-        />
-      ) : (
-        <span className="text-sm font-bold">
-          {displayName
-            .charAt(0)
-            .toUpperCase()}
-        </span>
-      )}
-    </div>
+            {/* Name + role */}
+            {!collapsed && (
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-white">
+                  {displayName}
+                </p>
+                <p className="mt-0.5 truncate text-xs text-white/70">
+                  {roleLabel}
+                </p>
+              </div>
+            )}
+          </div>
 
-    {/* User information */}
-    <div className="min-w-0 flex-1">
-      <p
-        className="
-          truncate
-          text-sm
-          font-semibold
-          text-white
-        "
-      >
-        {displayName}
-      </p>
-
-      <p
-        className="
-          mt-0.5
-          truncate
-          text-xs
-          text-white/70
-        "
-      >
-        {roleLabel}
-      </p>
-    </div>
-  </div>
-
-  {/* Role badge */}
-  <div>
-    <span
-      className="
-        inline-flex
-        items-center
-        gap-1.5
-        rounded-full
-        bg-white/10
-        px-2.5
-        py-1
-        text-[11px]
-        font-medium
-        text-white/80
-      "
-    >
-      <ShieldCheck size={12} />
-      {roleTitle}
-    </span>
-  </div>
-</div>
+          {/* Role badge */}
+          {!collapsed && (
+            <div className="mt-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/80">
+                <ShieldCheck size={12} />
+                {roleTitle}
+              </span>
+            </div>
+          )}
+        </div>
 
         {/* ====================================================
             NAVIGATION
         ==================================================== */}
-<nav className="flex-1 overflow-y-auto px-3 py-4">
+        <nav className="flex-1 overflow-y-auto px-2 py-3">
+          {/* Common items */}
+          <div className="space-y-1">
+            {commonItems.map((item) => (
+              <SidebarLink
+                key={item.href}
+                item={item}
+                pathname={pathname}
+                onClose={onClose}
+                collapsed={collapsed}
+              />
+            ))}
+          </div>
 
-  {/* Common */}
-  <div className="space-y-1">
-    {commonItems.map((item) => {
-      const active =
-        pathname === item.href;
+          {/* Role-specific */}
+          <div className="mt-5">
+            {!collapsed && (
+              <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-white/50">
+                {roleTitle}
+              </p>
+            )}
+            {collapsed && <div className="mb-2 h-px bg-white/15 mx-2" />}
 
-      return (
-        <Link
-          key={item.href}
-          href={item.href}
-          onClick={onClose}
-          className={`
-            flex
-            items-center
-            gap-3
-            rounded-xl
-            px-3
-            py-2.5
-            text-sm
-            font-medium
-            transition
-            ${
-              active
-                ? 'bg-white text-[#1671B9] shadow-sm'
-                : 'text-white/80 hover:bg-white/10 hover:text-white'
-            }
-          `}
-        >
-          {item.icon}
-          <span>{item.label}</span>
-        </Link>
-      );
-    })}
-  </div>
-
-  {/* Role-specific */}
-  <div className="mt-6">
-    <p
-      className="
-        mb-2
-        px-3
-        text-[10px]
-        font-semibold
-        uppercase
-        tracking-wider
-        text-white/50
-      "
-    >
-      {roleTitle}
-    </p>
-
-    <div className="space-y-1">
-      {roleItems.map((item) => {
-        const active =
-          pathname === item.href ||
-          pathname.startsWith(
-            `${item.href}/`,
-          );
-
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onClose}
-            className={`
-              flex
-              items-center
-              gap-3
-              rounded-xl
-              px-3
-              py-2.5
-              text-sm
-              font-medium
-              transition
-              ${
-                active
-                  ? 'bg-white text-[#1671B9] shadow-sm'
-                  : 'text-white/80 hover:bg-white/10 hover:text-white'
-              }
-            `}
-          >
-            {item.icon}
-            <span>{item.label}</span>
-          </Link>
-        );
-      })}
-    </div>
-  </div>
-
-</nav>
+            <div className="space-y-1">
+              {roleItems.map((item) => (
+                <SidebarLink
+                  key={item.href}
+                  item={item}
+                  pathname={pathname}
+                  onClose={onClose}
+                  collapsed={collapsed}
+                />
+              ))}
+            </div>
+          </div>
+        </nav>
 
         {/* ====================================================
             LOGOUT
         ==================================================== */}
 
-        <div
-          className="
-            shrink-0
-            border-t
-            border-white/15
-            p-3
-          "
-        >
+        <div className="shrink-0 border-t border-white/15 p-2">
+          {/* Logout */}
           <button
             type="button"
             onClick={handleLogout}
-            className="
-              flex
-              w-full
-              items-center
-              gap-3
-              rounded-lg
-              px-3
-              py-2.5
-              text-sm
-              font-medium
-              text-white/85
-              transition-colors
-              hover:bg-red-500/20
-              hover:text-white
-            "
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/85 transition-colors hover:bg-red-500/20 hover:text-white"
+            title={collapsed ? 'Logout' : undefined}
           >
             <LogOut size={19} />
-
-            <span>Logout</span>
+            {!collapsed && <span>Logout</span>}
           </button>
         </div>
       </aside>
@@ -624,39 +477,6 @@ const jobSeekerItems: MenuItem[] = [
   );
 }
 
-/* ============================================================
-   SIDEBAR SECTION
-============================================================ */
-
-function SidebarSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="mb-6">
-      <p
-        className="
-          mb-2
-          px-3
-          text-[11px]
-          font-semibold
-          uppercase
-          tracking-wider
-          text-blue-100/70
-        "
-      >
-        {title}
-      </p>
-
-      <div className="space-y-1">
-        {children}
-      </div>
-    </div>
-  );
-}
 
 /* ============================================================
    SIDEBAR LINK
@@ -666,69 +486,46 @@ function SidebarLink({
   item,
   pathname,
   onClose,
+  collapsed,
 }: {
   item: MenuItem;
   pathname: string;
   onClose: () => void;
+  collapsed: boolean;
 }) {
   const isActive =
     pathname === item.href ||
-    (item.href !== '/dashboard' &&
-      pathname.startsWith(`${item.href}/`));
+    (item.href !== '/dashboard' && pathname.startsWith(`${item.href}/`));
 
   return (
-    <Link
-      href={item.href}
-      onClick={onClose}
-      className={`
-        group
-        flex
-        items-center
-        gap-3
-        rounded-lg
-        px-3
-        py-2.5
-        text-sm
-        font-medium
-        transition-all
-        duration-200
-
-        ${
-          isActive
-            ? `
-              bg-white
-              text-[#1671B9]
-              shadow-sm
-            `
-            : `
-              text-white/85
-              hover:bg-white/10
-              hover:text-white
-            `
-        }
-      `}
-    >
-      <span
+    <div className="group relative">
+      <Link
+        href={item.href}
+        onClick={onClose}
         className={`
-          flex
-          shrink-0
-          items-center
-          justify-center
-          transition-transform
-          duration-200
-          group-hover:scale-105
-
+          flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition
+          ${collapsed ? 'justify-center' : ''}
           ${
             isActive
-              ? 'text-[#1671B9]'
-              : 'text-white/80'
+              ? 'bg-white text-[#1671B9] shadow-sm'
+              : 'text-white/80 hover:bg-white/10 hover:text-white'
           }
         `}
+        title={collapsed ? item.label : undefined}
       >
-        {item.icon}
-      </span>
+        <span className="flex shrink-0 items-center justify-center">
+          {item.icon}
+        </span>
+        {!collapsed && <span className="truncate">{item.label}</span>}
+      </Link>
 
-      <span>{item.label}</span>
-    </Link>
+      {/* Tooltip when collapsed */}
+      {collapsed && (
+        <div className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 dark:bg-slate-700">
+          {item.label}
+          <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-900 dark:border-r-slate-700" />
+        </div>
+      )}
+    </div>
   );
 }

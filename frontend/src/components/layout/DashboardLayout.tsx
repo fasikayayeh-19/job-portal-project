@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import { User } from '@/types/user';
+import { Menu } from 'lucide-react';
+
 export type UserRole =
   | 'JOB_SEEKER'
   | 'COMPANY'
   | 'ADMIN';
-
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -18,35 +19,74 @@ export default function DashboardLayout({
   children,
   user,
 }: DashboardLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] =
-    useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Restore collapsed state from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('sidebarCollapsed');
+    if (stored === 'true') {
+      setCollapsed(true);
+    }
+  }, []);
+
+  const toggleCollapse = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('sidebarCollapsed', String(next));
+      window.dispatchEvent(new Event('sidebar-toggle'));
+      return next;
+    });
+  };
 
   return (
     <div className="flex min-h-screen w-full bg-slate-50 dark:bg-slate-950">
+      {/* ============================================================
+          SIDEBAR
+      ============================================================ */}
+      {user && (
+        <Sidebar
+          user={user}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          collapsed={collapsed}
+          onToggleCollapse={toggleCollapse}
+        />
+      )}
 
-  {user && (
-    <Sidebar
-      user={user}
-      isOpen={sidebarOpen}
-      onClose={() => setSidebarOpen(false)}
-    />
-  )}
-<main className="min-w-0 flex-1 md:ml-50">
-  {user && (
-    <div className="border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 md:hidden">
-      <button
-        type="button"
-        onClick={() => setSidebarOpen(true)}
-        className="rounded-lg bg-[#1671B9] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#0F5F9E]"
+      {/* ============================================================
+          CONTENT WRAPPER
+          Starts after the sidebar. Margin adjusts when sidebar
+          collapses/expands.
+      ============================================================ */}
+      <div
+        className={`
+          flex min-h-screen flex-1 flex-col
+          transition-[margin] duration-300 ease-in-out
+          ${collapsed ? 'md:ml-16' : 'md:ml-64'}
+        `}
       >
-        Open Dashboard Menu
-      </button>
-    </div>
-  )}
+        {/* Mobile-only sticky bar with hamburger */}
+        {user && (
+          <div className="sticky top-0 z-30 flex h-12 shrink-0 items-center border-b border-slate-200 bg-white/95 px-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 md:hidden">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open sidebar menu"
+              className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+              <Menu size={20} />
+            </button>
+          </div>
+        )}
 
-  <div className="w-full p-4 sm:p-5 lg:p-5">
-    {children}
-  </div>
-</main>
-</div>);
+        {/* ============================================================
+            PAGE CONTENT
+        ============================================================ */}
+        <main className="flex-1 overflow-y-auto px-3 py-4 sm:px-4 sm:py-5 lg:px-5 lg:py-5">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
 }

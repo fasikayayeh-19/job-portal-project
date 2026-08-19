@@ -1,6 +1,6 @@
 "use client";
 
-import DashboardToolbar from "./DashboardToolbar";
+
 import  { useAdminDashboard } from "@/hooks/useAdmin";
 import api from "@/lib/axios";
 interface AdminDashboardProps {
@@ -67,7 +67,7 @@ export default function AdminDashboard({
       {/* =================================================
           Dashboard Toolbar
       ================================================== */}
-      <DashboardToolbar user={user} />
+
 
       {/* =================================================
           Header
@@ -183,8 +183,8 @@ export default function AdminDashboard({
         <>
           <AdminCharts data={dashboardData} />
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:col-span-2">
+          <div className="space-y-6">
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
                   Applications Over Time
@@ -209,7 +209,7 @@ export default function AdminDashboard({
               )}
             </section>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:col-span-2">
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
                   Jobs by Category
@@ -261,18 +261,19 @@ function ApplicationOverTimeChart({
   });
 
   return (
-    <div className="mt-8">
-      <div className="flex items-end gap-3">
-        <div className="flex h-64 w-12 shrink-0 flex-col justify-between pb-8 pt-2 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+    <div className="mt-6 sm:mt-8">
+      <div className="flex items-end gap-2 sm:gap-3">
+        {/* Y-Axis – hidden on mobile */}
+        <div className="hidden h-56 w-10 shrink-0 flex-col justify-between pb-8 pt-2 text-[10px] font-medium text-slate-500 dark:text-slate-400 md:flex md:w-12">
           {yAxisTicks.map((tick) => (
             <span key={tick}>{tick}</span>
           ))}
         </div>
 
-        <div className="relative flex-1">
-          <div className="pointer-events-none absolute inset-x-0 top-2 h-52 border-l border-b border-slate-300 dark:border-slate-700" />
+        <div className="relative min-w-0 flex-1">
+          <div className="pointer-events-none absolute inset-x-0 top-2 h-48 border-l border-b border-slate-300 dark:border-slate-700 md:h-52" />
 
-          <div className="absolute inset-x-0 top-2 hidden h-52 grid-cols-4 gap-0 lg:grid">
+          <div className="absolute inset-x-0 top-2 hidden h-48 grid-cols-4 gap-0 md:h-52 lg:grid">
             {yAxisTicks.slice(0, -1).map((_, index) => (
               <div
                 key={index}
@@ -281,7 +282,7 @@ function ApplicationOverTimeChart({
             ))}
           </div>
 
-          <div className="flex h-64 items-end gap-3 overflow-x-auto pb-8 pt-2">
+          <div className="flex h-56 items-end gap-1 overflow-x-auto pb-8 pt-2 scrollbar-thin sm:h-64 sm:gap-1.5 md:gap-2 lg:gap-3">
             {chartData.map((item) => {
               const height =
                 item.applications === 0
@@ -298,22 +299,22 @@ function ApplicationOverTimeChart({
               return (
                 <div
                   key={item.month}
-                  className="flex min-w-17.5 flex-1 flex-col items-center justify-end"
+                  className="flex w-8 min-w-8 flex-col items-center justify-end sm:w-10 sm:min-w-10 md:w-12 md:min-w-12"
                 >
-                  <span className="mb-2 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                  <span className="mb-1.5 text-[9px] font-semibold text-slate-600 dark:text-slate-300 sm:mb-2 sm:text-[10px] md:text-[11px]">
                     {item.applications}
                   </span>
 
-                  <div className="flex h-44 w-full max-w-13 items-end rounded-t-lg bg-slate-100 dark:bg-slate-800">
+                  <div className="flex h-36 w-full items-end rounded-t-md bg-slate-100 dark:bg-slate-800 sm:h-40 sm:rounded-t-lg md:h-44">
                     <div
-                      className="w-full rounded-t-lg bg-[#1671B9] transition-all duration-700"
+                      className="w-full rounded-t-md bg-[#1671B9] transition-all duration-700 sm:rounded-t-lg"
                       style={{
                         height: `${height}%`,
                       }}
                     />
                   </div>
 
-                  <span className="mt-3 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  <span className="mt-2 text-[8px] font-medium text-slate-500 dark:text-slate-400 sm:text-[9px] md:text-[11px]">
                     {formattedMonth}
                   </span>
                 </div>
@@ -323,8 +324,8 @@ function ApplicationOverTimeChart({
         </div>
       </div>
 
-      <div className="mt-1 flex items-center justify-between pl-14 pr-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        <span className="-rotate-90 transform" aria-label="Y-axis label">
+      <div className="mt-1 flex items-center justify-between px-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:text-[10px] md:pl-12 lg:pl-14">
+        <span className="hidden -rotate-90 transform md:inline" aria-label="Y-axis label">
           Applications
         </span>
         <span className="ml-auto">Month</span>
@@ -779,7 +780,7 @@ function JobsByCategoryChart({
   );
 
   return (
-    <div className="mt-8 space-y-5">
+    <div className="mt-6 space-y-4 sm:mt-8 sm:space-y-5">
       {data.map((item) => {
         const percentage =
           item.jobs === 0
@@ -788,17 +789,17 @@ function JobsByCategoryChart({
 
         return (
           <div key={item.category}>
-            <div className="mb-2 flex items-center justify-between gap-4">
-              <span className="truncate text-sm font-medium text-slate-600 dark:text-slate-300">
+            <div className="mb-1.5 flex items-center justify-between gap-3 sm:mb-2 sm:gap-4">
+              <span className="min-w-0 truncate text-xs font-medium text-slate-600 dark:text-slate-300 sm:text-sm">
                 {item.category}
               </span>
 
-              <span className="shrink-0 text-sm font-bold text-slate-900 dark:text-white">
+              <span className="shrink-0 text-xs font-bold text-slate-900 dark:text-white sm:text-sm">
                 {item.jobs}
               </span>
             </div>
 
-            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800 sm:h-3">
               <div
                 className="h-full rounded-full bg-[#1671B9] transition-all duration-700"
                 style={{

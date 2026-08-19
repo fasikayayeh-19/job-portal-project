@@ -55,10 +55,13 @@ export class Company {
   user!: User;
 
   @OneToMany(
-    () => Job,
-    (job) => job.company,
-  )
-  jobs!: Job[];
+  () => Job,
+  (job) => job.company,
+  {
+    cascade: true,
+  },
+)
+jobs!: Job[];
 
   @CreateDateColumn()
   createdAt!: Date;
