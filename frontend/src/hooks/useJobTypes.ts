@@ -5,35 +5,35 @@ import {
 } from "@tanstack/react-query";
 
 import {
-  getCategories,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-} from "@/services/categories.service";
+  getJobTypes,
+  createJobType,
+  updateJobType,
+  deleteJobType,
+} from "@/services/job-type.service";
 
-export function useCategories() {
+export function useJobTypes() {
   return useQuery({
-    queryKey: ["admin", "categories"],
-    queryFn: getCategories,
+    queryKey: ["admin", "job-types"],
+    queryFn: getJobTypes,
     staleTime: 5 * 60 * 1000,
   });
 }
 
-export function useCreateCategory() {
+export function useCreateJobType() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createCategory,
+    mutationFn: createJobType,
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["admin", "categories"],
+        queryKey: ["admin", "job-types"],
       });
     },
   });
 }
 
-export function useUpdateCategory() {
+export function useUpdateJobType() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -44,27 +44,27 @@ export function useUpdateCategory() {
       id: string;
       name: string;
     }) =>
-      updateCategory(id, {
+      updateJobType(id, {
         name,
       }),
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["admin", "categories"],
+        queryKey: ["admin", "job-types"],
       });
     },
   });
 }
 
-export function useDeleteCategory() {
+export function useDeleteJobType() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: deleteCategory,
+    mutationFn: deleteJobType,
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["admin", "categories"],
+        queryKey: ["admin", "job-types"],
       });
     },
   });

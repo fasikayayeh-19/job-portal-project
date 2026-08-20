@@ -29,6 +29,47 @@ import type {
    ADMIN DASHBOARD
 ========================================================= */
 
+import {
+  createAdmin,
+  deleteAdmin,
+} from "@/services/admin.service";
+
+export function useCreateAdmin() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createAdmin,
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "users"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "dashboard"],
+      });
+    },
+  });
+}
+
+export function useDeleteAdmin() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteAdmin,
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "users"],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "dashboard"],
+      });
+    },
+  });
+}
+
 export function useAdminDashboard() {
   return useQuery({
     queryKey: ["admin", "dashboard"],

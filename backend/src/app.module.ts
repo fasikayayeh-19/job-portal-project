@@ -15,6 +15,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { SavedJobsModule } from './saved-jobs/saved-jobs.module';
 import { JobSeekerModule } from './job-seeker/job-seeker.module';
 import { CompanyDashboardModule } from './company-dashboard/company-dashboard.module';
+import { JobTypesModule } from './job-types/job-types-module';
 
 @Module({
   imports: [
@@ -93,6 +94,7 @@ import { CompanyDashboardModule } from './company-dashboard/company-dashboard.mo
     JobSeekerModule,
 
     CompanyDashboardModule,
+    JobTypesModule,
   ],
 
   providers: [

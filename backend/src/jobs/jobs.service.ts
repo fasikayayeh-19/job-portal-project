@@ -5,11 +5,9 @@ import {
 } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
-
+import { JobType } from '../job-types/entities/job-type.entity';
 import { Repository } from 'typeorm';
-
 import { Job, JobStatus } from './entities/job.entity';
-
 import { Company } from '../companies/entities/company.entity';
 import { AdminJobQueryDto } from './dto/admin-job-query.dto';
 import { CreateJobDto } from './dto/create-job.dto';
@@ -19,57 +17,74 @@ import { JobQueryDto } from './dto/job-query.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 @Injectable()
 export class JobsService {
-  constructor(
-    @InjectRepository(Job)
-    private jobRepository: Repository<Job>,
+constructor(
+  @InjectRepository(Job)
+  private jobRepository: Repository<Job>,
 
-    @InjectRepository(Company)
-    private companyRepository: Repository<Company>,
+  @InjectRepository(Company)
+  private companyRepository: Repository<Company>,
 
-    @InjectRepository(Category)
-    private categoryRepository: Repository<Category>,
-  ) {}
+  @InjectRepository(Category)
+  private categoryRepository: Repository<Category>,
 
-  async create(
-    dto: CreateJobDto,
+  @InjectRepository(JobType)
+  private jobTypeRepository: Repository<JobType>,
+) {}
 
-    user: any,
-  ) {
-    const category = await this.categoryRepository.findOne({
-      where: {
-        id: dto.categoryId,
-      },
-    });
+ async create(dto: CreateJobDto, user: any) {
+  const category = await this.categoryRepository.findOne({
+    where: {
+      id: dto.categoryId,
+    },
+  });
 
-    if (!category) {
-      throw new NotFoundException('Category not found');
-    }
-
-    const company = await this.companyRepository.findOne({
-      where: {
-        user: {
-          id: user.id,
-        },
-      },
-    });
-
-    if (!company) {
-      throw new ForbiddenException('Company profile not found');
-    }
-
-    if (company.status !== CompanyStatus.APPROVED) {
-      throw new ForbiddenException('Company is not approved');
-    }
-
-    const job = this.jobRepository.create({
-      ...dto,
-
-      company,
-      category,
-    });
-
-    return this.jobRepository.save(job);
+  if (!category) {
+    throw new NotFoundException('Category not found');
   }
+
+  const jobType = await this.jobTypeRepository.findOne({
+    where: {
+      id: dto.jobTypeId,
+    },
+  });
+
+  if (!jobType) {
+    throw new NotFoundException('Job type not found');
+  }
+
+  const company = await this.companyRepository.findOne({
+    where: {
+      user: {
+        id: user.id,
+      },
+    },
+  });
+
+  if (!company) {
+    throw new ForbiddenException('Company profile not found');
+  }
+
+  if (company.status !== CompanyStatus.APPROVED) {
+    throw new ForbiddenException('Company is not approved');
+  }
+
+  const job = this.jobRepository.create({
+    title: dto.title,
+    description: dto.description,
+    requirements: dto.requirements,
+    skills: dto.skills,
+    location: dto.location,
+    experience: dto.experience,
+    salary: dto.salary,
+    deadline: dto.deadline,
+
+    category,
+    jobType,
+    company,
+  });
+
+  return this.jobRepository.save(job);
+}
 // =====================================================
 // PUBLIC - ALL APPROVED COMPANY JOBS
 // =====================================================
@@ -78,37 +93,23 @@ async findAll(query: JobQueryDto) {
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
 
-  const qb = this.jobRepository
-    .createQueryBuilder('job')
-    .leftJoinAndSelect('job.company', 'company')
-    .leftJoinAndSelect('job.category', 'category');
+ const qb = this.jobRepository
+  .createQueryBuilder('job')
+  .leftJoinAndSelect('job.company', 'company')
+  .leftJoinAndSelect('job.category', 'category')
+  .leftJoinAndSelect('job.jobType', 'jobType');
 
-  // ===================================================
-  // ONLY JOBS FROM APPROVED COMPANIES
-  // ===================================================
+  // Only jobs from approved companies
+  qb.andWhere('company.status = :companyStatus', {
+    companyStatus: CompanyStatus.APPROVED,
+  });
 
-  qb.andWhere(
-    'company.status = :companyStatus',
-    {
-      companyStatus: CompanyStatus.APPROVED,
-    },
-  );
+  // PUBLIC USERS SEE ALL NON-CLOSED JOBS
+  qb.andWhere('job.status != :jobStatus', {
+    jobStatus: JobStatus.CLOSED,
+  });
 
-  // ===================================================
-  // DO NOT SHOW CLOSED JOBS
-  // ===================================================
-
-  qb.andWhere(
-    'job.status != :jobStatus',
-    {
-      jobStatus: JobStatus.CLOSED,
-    },
-  );
-
-  // ===================================================
-  // SEARCH
-  // ===================================================
-
+  // Search
   if (query.search) {
     qb.andWhere(
       `(
@@ -122,10 +123,7 @@ async findAll(query: JobQueryDto) {
     );
   }
 
-  // ===================================================
-  // LOCATION
-  // ===================================================
-
+  // Location
   if (query.location) {
     qb.andWhere(
       'LOWER(job.location) LIKE LOWER(:location)',
@@ -135,39 +133,23 @@ async findAll(query: JobQueryDto) {
     );
   }
 
-  // ===================================================
-  // CATEGORY
-  // ===================================================
-
+  // Category
   if (query.categoryId) {
-    qb.andWhere(
-      'category.id = :categoryId',
-      {
-        categoryId: query.categoryId,
-      },
-    );
+    qb.andWhere('category.id = :categoryId', {
+      categoryId: query.categoryId,
+    });
   }
 
-  // ===================================================
-  // JOB TYPE
-  // ===================================================
-
-  if (query.jobType) {
-    qb.andWhere(
-      'job.jobType = :jobType',
-      {
-        jobType: query.jobType,
-      },
-    );
+  // Job Type
+  if (query.jobTypeId) {
+    qb.andWhere('jobType.id = :jobTypeId', {
+      jobTypeId: query.jobTypeId,
+    });
   }
 
-  // ===================================================
-  // POSTED WITHIN
-  // ===================================================
-
+  // Posted within
   if (query.postedWithin) {
     const now = new Date();
-
     let fromDate: Date | null = null;
 
     if (query.postedWithin === 'today') {
@@ -177,66 +159,42 @@ async findAll(query: JobQueryDto) {
 
     if (query.postedWithin === 'yesterday') {
       fromDate = new Date(now);
-      fromDate.setDate(
-        fromDate.getDate() - 1,
-      );
+      fromDate.setDate(fromDate.getDate() - 1);
       fromDate.setHours(0, 0, 0, 0);
     }
 
     if (query.postedWithin === 'week') {
       fromDate = new Date(now);
-      fromDate.setDate(
-        fromDate.getDate() - 7,
-      );
+      fromDate.setDate(fromDate.getDate() - 7);
     }
 
     if (query.postedWithin === 'month') {
       fromDate = new Date(now);
-      fromDate.setMonth(
-        fromDate.getMonth() - 1,
-      );
+      fromDate.setMonth(fromDate.getMonth() - 1);
     }
 
     if (fromDate) {
-      qb.andWhere(
-        'job.createdAt >= :fromDate',
-        {
-          fromDate,
-        },
-      );
+      qb.andWhere('job.createdAt >= :fromDate', {
+        fromDate,
+      });
     }
   }
 
-  // ===================================================
-  // ORDER
-  // ===================================================
+  // Newest jobs first
+  qb.orderBy('job.createdAt', 'DESC');
 
-  qb.orderBy(
-    'job.createdAt',
-    'DESC',
-  );
-
-  // ===================================================
-  // PAGINATION
-  // ===================================================
-
-  qb.skip(
-    (page - 1) * limit,
-  );
-
+  // Pagination
+  qb.skip((page - 1) * limit);
   qb.take(limit);
 
-  const [jobs, total] =
-    await qb.getManyAndCount();
+  const [jobs, total] = await qb.getManyAndCount();
 
   return {
     data: jobs,
     total,
     page,
     limit,
-    totalPages: Math.ceil(
-      total / limit,
-    ),
+    totalPages: Math.ceil(total / limit),
   };
 }
 
@@ -255,6 +213,7 @@ async findOne(id: string) {
       relations: {
         company: true,
         category: true,
+        jobType: true,
       },
     });
 
@@ -316,6 +275,7 @@ async findOne(id: string) {
 
     relations: {
       category: true,
+      jobType: true,
       applications: true,
     },
 
@@ -383,15 +343,13 @@ async getJobs(query: AdminJobQueryDto) {
   const qb = this.jobRepository
     .createQueryBuilder('job')
     .leftJoinAndSelect('job.company', 'company')
-    .leftJoinAndSelect('job.category', 'category');
+    .leftJoinAndSelect('job.category', 'category')
+    .leftJoinAndSelect('job.jobType', 'jobType');
 
   // ADMIN JOB PAGE:
-  // Only show published and closed jobs
-  qb.andWhere('job.status IN (:...statuses)', {
-    statuses: [
-      JobStatus.PUBLISHED,
-      JobStatus.CLOSED,
-    ],
+  // Show all non-closed jobs
+  qb.andWhere('job.status != :jobStatus', {
+    jobStatus: JobStatus.CLOSED,
   });
 
   // Search

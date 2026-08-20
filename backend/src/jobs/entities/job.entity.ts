@@ -9,7 +9,7 @@ import {
   OneToMany,
 } from 'typeorm';
 
-
+import { JobType } from '../../job-types/entities/job-type.entity';
 import { Company } from '../../companies/entities/company.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { Application } from '../../applications/entities/application.entity';
@@ -63,8 +63,16 @@ export class Job {
 
 
 
-  @Column()
-  jobType!:string;
+ @ManyToOne(
+  () => JobType,
+  (jobType) => jobType.jobs,
+  {
+    nullable: false,
+    onDelete: 'RESTRICT',
+  },
+)
+@JoinColumn()
+jobType!: JobType;
 
 
 

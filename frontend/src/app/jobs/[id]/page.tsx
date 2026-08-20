@@ -697,12 +697,14 @@ function ContentSection({
    HELPERS
 ========================================================= */
 
-function formatJobType(value?: string) {
+function formatJobType(value?: { id: string; name: string } | string | null) {
   if (!value) {
     return "Not specified";
   }
 
-  return value
+  const name = typeof value === "string" ? value : value.name;
+
+  return name
     .toLowerCase()
     .replace(/_/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());

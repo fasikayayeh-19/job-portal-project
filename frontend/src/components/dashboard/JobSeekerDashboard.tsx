@@ -189,7 +189,7 @@ function RecommendedJobRow({
           </span>
 
           <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-            💼 {job.jobType}
+            💼 {job.jobType?.name || 'Not specified'}
           </span>
 
         </div>

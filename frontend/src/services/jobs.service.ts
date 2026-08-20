@@ -11,7 +11,10 @@ export interface Job {
   requirements?: string;
   skills?: string[];
   location: string;
-  jobType: string;
+  jobType?: {
+    id: string;
+    name: string;
+  };
   experience: string;
   salary?: string | null;
   deadline?: string | null;
@@ -42,8 +45,7 @@ export interface JobFilters {
   search?: string;
   location?: string;
   categoryId?: string;
-  career?: string;
-  jobType?: string;
+  jobTypeId?: string;
   postedWithin?: string;
 }
 
@@ -120,12 +122,8 @@ export async function getJobs(
           categoryId: filters.categoryId,
         }),
 
-        ...(filters.career && {
-          career: filters.career,
-        }),
-
-        ...(filters.jobType && {
-          jobType: filters.jobType,
+        ...(filters.jobTypeId && {
+          jobTypeId: filters.jobTypeId,
         }),
 
         ...(filters.postedWithin && {

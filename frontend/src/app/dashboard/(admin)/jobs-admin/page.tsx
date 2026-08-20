@@ -214,7 +214,7 @@ export default function AdminJobsPage() {
                         </p>
 
                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                          {job.jobType}
+                          {job.jobType?.name || job.jobType}
                         </p>
                       </td>
 
@@ -345,7 +345,7 @@ export default function AdminJobsPage() {
                       </p>
 
                       <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                        {job.jobType}
+                        {job.jobType?.name || job.jobType}
                       </p>
                     </div>
 

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 import JobSeekerProfile from '@/components/profile/JobSeekerProfile';
 import CompanyProfile from '@/components/profile/CompanyProfile';
-
+import AdminProfile from '@/components/profile/AdminProfile';
 type UserRole = 'JOB_SEEKER' | 'COMPANY' | 'ADMIN';
 
 interface User {
@@ -65,18 +65,9 @@ export default function ProfilePage() {
     case 'COMPANY':
       return <CompanyProfile />;
 
-    case 'ADMIN':
-      return (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">
-            Admin Profile
-          </h1>
-
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Admin profile management.
-          </p>
-        </div>
-      );
+   
+     case 'ADMIN':
+    return <AdminProfile />;;
 
     default:
       router.replace('/dashboard');

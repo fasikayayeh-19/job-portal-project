@@ -1,5 +1,5 @@
-import { Controller,Delete,Query, Get, Patch, Param, UseGuards,Req } from '@nestjs/common';
-
+import { Controller,Delete,Query, Get, Patch, Param, UseGuards,Req ,Post,Body} from '@nestjs/common';
+import { CreateAdminDto } from './dto/create-admin.dto';
 import { AdminService } from './admin.service';
 
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -92,6 +92,14 @@ activateCompany(@Param('id') id: string) {
 @Roles('ADMIN')
 blockUser(@Param('id') id: string) {
   return this.adminService.blockUser(id);
+}
+@Post('admins')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
+createAdmin(
+  @Body() dto: CreateAdminDto,
+) {
+  return this.adminService.createAdmin(dto);
 }
 
 @Patch('users/:id/unblock')

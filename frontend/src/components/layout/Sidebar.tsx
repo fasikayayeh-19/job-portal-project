@@ -64,8 +64,12 @@ interface SidebarProps {
 
 interface MenuItem {
   label: string;
-  href: string;
+  href?: string;
   icon: React.ReactNode;
+  children?: {
+    label: string;
+    href: string;
+  }[];
 }
 
 
@@ -82,7 +86,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-
+const [openManagement, setOpenManagement] = useState(false);
   const [currentUser, setCurrentUser] =
     useState<SidebarUser>(user);
 
@@ -198,38 +202,52 @@ const jobSeekerItems: MenuItem[] = [
      ADMIN
   ========================================================== */
 
-  const adminItems: MenuItem[] = [
-    {
-      label: 'Users',
-      href: '/dashboard/users',
-      icon: <Users size={19} />,
-    },
-    {
-      label: 'Companies',
-      href: '/dashboard/companies',
-      icon: <Building2 size={19} />,
-    },
-    {
-      label: 'Jobs',
-      href: '/dashboard/jobs-admin',
-      icon: <BriefcaseBusiness size={19} />,
-    },
-    {
-      label: 'Applications',
-      href: '/dashboard/applications',
-      icon: <ClipboardList size={19} />,
-    },
-    {
-      label: 'Analytics',
-      href: '/dashboard/analytics',
-      icon: <BarChart3 size={19} />,
-    },
-    {
-    label: 'Management',
-    href: '/dashboard/management',
-    icon: <Settings2 size={19} />,
+ const adminItems: MenuItem[] = [
+  {
+    label: "Users",
+    href: "/dashboard/users",
+    icon: <Users size={19} />,
   },
-  ];
+  {
+    label: "Companies",
+    href: "/dashboard/companies",
+    icon: <Building2 size={19} />,
+  },
+  {
+    label: "Jobs",
+    href: "/dashboard/jobs-admin",
+    icon: <BriefcaseBusiness size={19} />,
+  },
+  {
+    label: "Applications",
+    href: "/dashboard/applications",
+    icon: <ClipboardList size={19} />,
+  },
+  {
+    label: "Analytics",
+    href: "/dashboard/analytics",
+    icon: <BarChart3 size={19} />,
+  },
+  {
+    label: "Management",
+    href: "/dashboard/management",
+    icon: <Settings2 size={19} />,
+    children: [
+      {
+        label: "Categories",
+        href: "/dashboard/management/categories",
+      },
+      {
+        label: "Job Types",
+        href: "/dashboard/management/job-types",
+      },
+      {
+        label: "Admin Users",
+        href: "/dashboard/management/admin-users",
+      },
+    ],
+  },
+];
 
   /* ==========================================================
      SELECT ROLE MENU
@@ -437,6 +455,8 @@ const jobSeekerItems: MenuItem[] = [
                 pathname={pathname}
                 onClose={onClose}
                 collapsed={collapsed}
+                openManagement={openManagement}
+                setOpenManagement={setOpenManagement}
               />
             ))}
           </div>
@@ -451,15 +471,17 @@ const jobSeekerItems: MenuItem[] = [
             {collapsed && <div className="mb-2 h-px bg-white/15 mx-2" />}
 
             <div className="space-y-1">
-              {roleItems.map((item) => (
-                <SidebarLink
-                  key={item.href}
-                  item={item}
-                  pathname={pathname}
-                  onClose={onClose}
-                  collapsed={collapsed}
-                />
-              ))}
+            {roleItems.map((item) => (
+  <SidebarLink
+    key={item.label}
+    item={item}
+    pathname={pathname}
+    onClose={onClose}
+    collapsed={collapsed}
+    openManagement={openManagement}
+    setOpenManagement={setOpenManagement}
+  />
+))}
             </div>
           </div>
         </nav>
@@ -495,43 +517,159 @@ function SidebarLink({
   pathname,
   onClose,
   collapsed,
+  openManagement,
+  setOpenManagement,
 }: {
   item: MenuItem;
   pathname: string;
   onClose: () => void;
   collapsed: boolean;
+  openManagement: boolean;
+  setOpenManagement: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const isActive =
-    pathname === item.href ||
-    (item.href !== '/dashboard' && pathname.startsWith(`${item.href}/`));
+    item.href &&
+    (pathname === item.href ||
+      (item.href !== '/dashboard' &&
+        pathname.startsWith(`${item.href}/`)));
+
+  const isManagementActive =
+    item.label === 'Management' &&
+    item.children?.some(
+      (child) =>
+        pathname === child.href ||
+        pathname.startsWith(`${child.href}/`),
+    );
 
   return (
     <div className="group relative">
-      <Link
-        href={item.href}
-        onClick={onClose}
-        className={`
-          flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition
-          ${collapsed ? 'justify-center' : ''}
-          ${
-            isActive
-              ? 'bg-white text-[#1671B9] shadow-sm'
-              : 'text-white/80 hover:bg-white/10 hover:text-white'
-          }
-        `}
-        title={collapsed ? item.label : undefined}
-      >
-        <span className="flex shrink-0 items-center justify-center">
-          {item.icon}
-        </span>
-        {!collapsed && <span className="truncate">{item.label}</span>}
-      </Link>
+      {item.children ? (
+        <>
+          {/* Management parent */}
+          <button
+            type="button"
+            onClick={() =>
+              setOpenManagement((prev) => !prev)
+            }
+            className={`
+              flex w-full items-center gap-3 rounded-xl px-3 py-2.5
+              text-sm font-medium transition
+              ${collapsed ? 'justify-center' : ''}
+              ${
+                isManagementActive
+                  ? 'bg-white text-[#1671B9] shadow-sm'
+                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+              }
+            `}
+            title={collapsed ? item.label : undefined}
+          >
+            <span className="flex shrink-0 items-center justify-center">
+              {item.icon}
+            </span>
+
+            {!collapsed && (
+              <>
+                <span className="flex-1 truncate text-left">
+                  {item.label}
+                </span>
+
+                <span
+                  className={`
+                    text-xs transition-transform duration-200
+                    ${openManagement ? 'rotate-180' : ''}
+                  `}
+                >
+                  ▼
+                </span>
+              </>
+            )}
+          </button>
+
+          {/* Management children */}
+          {!collapsed && openManagement && (
+            <div className="ml-8 mt-1 space-y-1">
+              {item.children.map((child) => {
+                const childActive =
+                  pathname === child.href ||
+                  pathname.startsWith(`${child.href}/`);
+
+                return (
+                  <Link
+                    key={child.href}
+                    href={child.href}
+                    onClick={onClose}
+                    className={`
+                      block rounded-lg px-3 py-2 text-sm
+                      transition
+                      ${
+                        childActive
+                          ? 'bg-white/20 text-white font-semibold'
+                          : 'text-white/70 hover:bg-white/10 hover:text-white'
+                      }
+                    `}
+                  >
+                    {child.label}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </>
+      ) : (
+        /* Normal menu item */
+        <Link
+          href={item.href!}
+          onClick={onClose}
+          className={`
+            flex items-center gap-3 rounded-xl px-3 py-2.5
+            text-sm font-medium transition
+            ${collapsed ? 'justify-center' : ''}
+            ${
+              isActive
+                ? 'bg-white text-[#1671B9] shadow-sm'
+                : 'text-white/80 hover:bg-white/10 hover:text-white'
+            }
+          `}
+          title={collapsed ? item.label : undefined}
+        >
+          <span className="flex shrink-0 items-center justify-center">
+            {item.icon}
+          </span>
+
+          {!collapsed && (
+            <span className="truncate">
+              {item.label}
+            </span>
+          )}
+        </Link>
+      )}
 
       {/* Tooltip when collapsed */}
       {collapsed && (
-        <div className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 dark:bg-slate-700">
+        <div
+          className="
+            pointer-events-none absolute left-full top-1/2
+            z-50 ml-3 -translate-y-1/2
+            whitespace-nowrap rounded-lg
+            bg-slate-900 px-3 py-1.5
+            text-xs font-medium text-white
+            opacity-0 shadow-lg
+            transition-opacity duration-150
+            group-hover:opacity-100
+            dark:bg-slate-700
+          "
+        >
           {item.label}
-          <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-900 dark:border-r-slate-700" />
+
+          <div
+            className="
+              absolute right-full top-1/2
+              -translate-y-1/2
+              border-4 border-transparent
+              border-r-slate-900
+              dark:border-r-slate-700
+            "
+          />
         </div>
       )}
     </div>

@@ -31,11 +31,16 @@ export class JobQueryDto {
   // Employment type filter
   @IsOptional()
   @IsString()
-  jobType?: string;
+  jobTypeId?: string;
 
   // Posted date filter
   @IsOptional()
   @IsString()
-  postedWithin?: string;
+  postedWithin?:
+
+    | 'today'
+    | 'yesterday'
+    | 'week'
+    | 'month';;
 }
 

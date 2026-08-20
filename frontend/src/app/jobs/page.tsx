@@ -6,10 +6,8 @@ import {
   Search,
   MapPin,
   BriefcaseBusiness,
-  Clock3,
   RotateCcw,
   SlidersHorizontal,
-  Bookmark,
   ChevronLeft,
   ChevronRight,
   CalendarDays,
@@ -17,13 +15,10 @@ import {
 
 import { useJobs } from "@/hooks/useJobs";
 import { useCategories } from "@/hooks/useCategories";
+import { useJobTypes } from "@/hooks/useJobTypes";
 import SaveJobButton from "@/components/jobs/SaveJobButton";
 
 import { useSavedJobs } from "@/hooks/useSavedJobs";
-interface SaveJobButtonProps {
-  jobId: string;
-  isSaved: boolean;
-}
 
 const BLUE = "#1671B9";
 const TEAL = "#49BE8C";
@@ -35,7 +30,10 @@ type Job = {
   requirements?: string;
   skills?: string[];
   location: string;
-  jobType: string;
+  jobType?: {
+    id: string;
+    name: string;
+  };
   experience: string;
   salary?: string;
   deadline?: string;
@@ -61,46 +59,6 @@ type JobsResponse = {
   limit: number;
   totalPages: number;
 };
-
-const careerOptions = [
-  "Software Development",
-  "Design",
-  "Marketing",
-  "Sales",
-  "Customer Service",
-  "Finance",
-  "Human Resources",
-  "Management",
-  "Engineering",
-  "Healthcare",
-  "Education",
-  "Accounting",
-  "Administration",
-  "Information Technology",
-];
-
-const jobTypeOptions = [
-  {
-    value: "FULL_TIME",
-    label: "Full Time",
-  },
-  {
-    value: "PART_TIME",
-    label: "Part Time",
-  },
-  {
-    value: "CONTRACT",
-    label: "Contract",
-  },
-  {
-    value: "INTERNSHIP",
-    label: "Internship",
-  },
-  {
-    value: "REMOTE",
-    label: "Remote",
-  },
-];
 
 const postedOptions = [
   {
@@ -131,8 +89,7 @@ export default function FindJobsPage() {
 
   const [categoryId, setCategoryId] = useState("");
   const [location, setLocation] = useState("");
-  const [career, setCareer] = useState("");
-  const [jobType, setJobType] = useState("");
+  const [jobTypeId, setJobTypeId] = useState("");
   const [postedWithin, setPostedWithin] = useState("");
 
   const [page, setPage] = useState(1);
@@ -143,6 +100,8 @@ export default function FindJobsPage() {
 
   const { data: categories = [], isLoading: categoriesLoading } =
     useCategories();
+
+  const { data: jobTypes = [], isLoading: jobTypesLoading } = useJobTypes();
 
   const { data: savedJobs = [] } = useSavedJobs();
 
@@ -157,8 +116,7 @@ export default function FindJobsPage() {
     search,
     location,
     categoryId,
-    career,
-    jobType,
+    jobTypeId,
     postedWithin,
   });
 
@@ -169,13 +127,6 @@ export default function FindJobsPage() {
   const jobs = jobsData?.data ?? [];
 
   const totalPages = jobsData?.totalPages ?? 1;
-
-  /*
-   * Featured jobs can later come directly from the backend
-   * using a featured field.
-   *
-   * For now we display jobs with salary as featured examples.
-   */
 
   const displayedJobs = useMemo(() => {
     let result = [...jobs];
@@ -208,14 +159,13 @@ export default function FindJobsPage() {
     setSearchInput("");
     setCategoryId("");
     setLocation("");
-    setCareer("");
-    setJobType("");
+    setJobTypeId("");
     setPostedWithin("");
     setPage(1);
   };
 
   const hasFilters =
-    search || categoryId || location || career || jobType || postedWithin;
+    search || categoryId || location || jobTypeId || postedWithin;
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -256,7 +206,8 @@ export default function FindJobsPage() {
                   }
                 }}
                 placeholder="Job title, keywords or industry"
-              className="h-11 w-full bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500 sm:text-base"/>
+                className="h-11 w-full bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500 sm:text-base"
+              />
             </div>
 
             <button
@@ -339,45 +290,27 @@ export default function FindJobsPage() {
               ]}
             />
 
-            {/* Career */}
-
-            <FilterSelect
-              value={career}
-              onChange={(value) => {
-                setCareer(value);
-                setPage(1);
-              }}
-              icon={<BriefcaseBusiness size={16} />}
-              placeholder="Career"
-              options={[
-                {
-                  value: "",
-                  label: "All Careers",
-                },
-                ...careerOptions.map((careerItem) => ({
-                  value: careerItem,
-                  label: careerItem,
-                })),
-              ]}
-            />
-
             {/* Employment Type */}
 
             <FilterSelect
-              value={jobType}
+              value={jobTypeId}
               onChange={(value) => {
-                setJobType(value);
+                setJobTypeId(value);
                 setPage(1);
               }}
-              icon={<Clock3 size={16} />}
+              icon={<BriefcaseBusiness size={16} />}
               placeholder="Employment Type"
               options={[
                 {
                   value: "",
                   label: "All Types",
                 },
-                ...jobTypeOptions,
+                ...jobTypes.map((jt) => ({
+                  value: jt.id,
+                  label: jt.name,
+                })),
               ]}
+              loading={jobTypesLoading}
             />
 
             {/* Posted Within */}
@@ -422,14 +355,16 @@ export default function FindJobsPage() {
           <div className="min-w-0">
             {/* Tabs + Sort */}
 
-           <div className="mb-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">    <div className="flex gap-8">
+            <div className="mb-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
+              <div className="flex gap-8">
                 <button
                   type="button"
                   onClick={() => setActiveTab("all")}
                   className={`relative pb-4 text-sm font-semibold transition ${
                     activeTab === "all"
                       ? "text-[#49BE8C]"
-                      : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"  }`}
+                      : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                  }`}
                 >
                   All Jobs
                   {activeTab === "all" && (
@@ -473,7 +408,8 @@ export default function FindJobsPage() {
                   onChange={(event) =>
                     setSortBy(event.target.value as "date" | "title")
                   }
-                 className="border-0 bg-transparent text-sm font-medium text-slate-600 outline-none dark:text-slate-300" >
+                  className="border-0 bg-transparent text-sm font-medium text-slate-600 outline-none dark:text-slate-300"
+                >
                   <option value="date">Date</option>
 
                   <option value="title">Title</option>
@@ -494,7 +430,8 @@ export default function FindJobsPage() {
             {/* Error */}
 
             {isError && !isLoading && (
-              <div className="rounded-2xl border border-red-200 bg-white p-10 text-center dark:border-red-900/50 dark:bg-slate-900"> <h3 className="font-semibold text-slate-800 dark:text-slate-100">
+              <div className="rounded-2xl border border-red-200 bg-white p-10 text-center dark:border-red-900/50 dark:bg-slate-900">
+                <h3 className="font-semibold text-slate-800 dark:text-slate-100">
                   Unable to load jobs
                 </h3>
 
@@ -507,7 +444,8 @@ export default function FindJobsPage() {
             {/* Empty */}
 
             {!isLoading && !isError && displayedJobs.length === 0 && (
-             <div className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center dark:border-slate-800 dark:bg-slate-900">   <div
+              <div className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center dark:border-slate-800 dark:bg-slate-900">
+                <div
                   className="mx-auto flex h-14 w-14 items-center justify-center rounded-full"
                   style={{
                     backgroundColor: `${TEAL}20`,
@@ -521,7 +459,8 @@ export default function FindJobsPage() {
                   />
                 </div>
 
-                <h3 className="mt-5 text-lg font-semibold text-slate-100 dark:text-slate-100">        No jobs found
+                <h3 className="mt-5 text-lg font-semibold text-slate-800 dark:text-slate-100">
+                  No jobs found
                 </h3>
 
                 <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
@@ -575,7 +514,8 @@ export default function FindJobsPage() {
             <div className="sticky top-24 space-y-5">
               {/* Notice card */}
 
-              <div className="rounded-2xl border border-slate-100 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">  <div className="text-3xl">🚀</div>
+              <div className="rounded-2xl border border-slate-100 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div className="text-3xl">🚀</div>
 
                 <h3 className="mt-4 text-xl font-semibold text-slate-900 dark:text-white">
                   Get noticed faster
@@ -656,8 +596,8 @@ function FilterSelect({
         onChange={(event) => onChange(event.target.value)}
         disabled={loading}
         className={`h-11 min-w-[155px] appearance-none rounded-xl border border-white/50 bg-white/90 px-4 text-sm text-slate-600 shadow-sm outline-none transition hover:bg-white focus:border-[#1671B9] focus:ring-2 focus:ring-[#1671B9]/20 dark:border-slate-700 dark:bg-slate-800/95 dark:text-slate-200 dark:hover:bg-slate-800 ${
-  icon ? "pl-9" : "pl-4"
-}`}
+          icon ? "pl-9" : "pl-4"
+        }`}
       >
         {loading ? (
           <option value="">Loading...</option>
@@ -687,7 +627,8 @@ function JobCard({ job, isSaved }: { job: Job; isSaved: boolean }) {
   return (
     <Link
       href={`/jobs/${job.id}`}
-     className="mb-5 block rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/80 sm:p-7" >
+      className="mb-5 block rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/80 sm:p-7"
+    >
       <article>
         {/* Top */}
         <div className="flex items-start justify-between gap-4">
@@ -760,7 +701,7 @@ function JobCard({ job, isSaved }: { job: Job; isSaved: boolean }) {
               <span className="inline-flex items-center gap-2">
                 <BriefcaseBusiness size={17} className="text-slate-500" />
 
-                {formatJobType(job.jobType)}
+                {job.jobType?.name || "Not specified"}
               </span>
             </div>
 
@@ -775,7 +716,8 @@ function JobCard({ job, isSaved }: { job: Job; isSaved: boolean }) {
                 {job.skills.slice(0, 5).map((skill) => (
                   <span
                     key={skill}
-                   className="rounded-md bg-slate-100 px-2.5 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300"  >
+                    className="rounded-md bg-slate-100 px-2.5 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                  >
                     {skill}
                   </span>
                 ))}
@@ -867,7 +809,8 @@ function Pagination({
         type="button"
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
-        className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-[#1671B9] hover:text-[#1671B9] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+        className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-[#1671B9] hover:text-[#1671B9] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+      >
         <ChevronLeft size={18} />
       </button>
 
@@ -920,7 +863,8 @@ function Pagination({
 
 function JobSkeleton() {
   return (
-   <div className="animate-pulse rounded-2xl border border-slate-100 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">  <div className="h-4 w-32 rounded bg-slate-200" />
+    <div className="animate-pulse rounded-2xl border border-slate-100 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="h-4 w-32 rounded bg-slate-200" />
 
       <div className="mt-7 h-7 w-3/4 rounded bg-slate-200 dark:bg-slate-800" />
 
@@ -940,17 +884,6 @@ function JobSkeleton() {
 /* =========================================================
    HELPERS
 ========================================================= */
-
-function formatJobType(value?: string) {
-  if (!value) {
-    return "Not specified";
-  }
-
-  return value
-    .toLowerCase()
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
 
 function formatPostedDate(date: Date) {
   const diff = Date.now() - date.getTime();

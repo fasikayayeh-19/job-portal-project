@@ -1,7 +1,11 @@
 import { Injectable,NotFoundException,ForbiddenException } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
-
+import {
+  ConflictException,
+} from '@nestjs/common';
+import { CreateAdminDto } from './dto/create-admin.dto';
+import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import {
   FindOptionsWhere,
@@ -40,6 +44,8 @@ constructor(
 
   private readonly mailService: MailService,
 ) {}
+
+
 
 async adminFindAll(query: AdminJobQueryDto) {
   const page = Number(query.page) || 1;
@@ -209,6 +215,8 @@ async unblockUser(id: string) {
 }
 
 
+
+
   async getPendingCompanies() {
     return this.companyRepository.find({
       where: {
@@ -254,6 +262,43 @@ async unblockUser(id: string) {
   return {
     message: 'Company approved successfully',
   };
+}
+
+async createAdmin(dto: CreateAdminDto) {
+  const existingUser = await this.userRepository.findOne({
+    where: {
+      email: dto.email,
+    },
+  });
+
+  if (existingUser) {
+    throw new ConflictException(
+      'Email is already registered',
+    );
+  }
+
+  const hashedPassword = await bcrypt.hash(
+    dto.password,
+    10,
+  );
+
+  const admin = this.userRepository.create({
+    firstName: dto.firstName,
+    lastName: dto.lastName,
+    email: dto.email,
+    password: hashedPassword,
+
+    role: 'ADMIN',
+    status: 'ACTIVE',
+  });
+
+  const savedAdmin =
+    await this.userRepository.save(admin);
+
+  // Never return the password
+  const { password, ...result } = savedAdmin;
+
+  return result;
 }
 
 

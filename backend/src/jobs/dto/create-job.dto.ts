@@ -5,46 +5,37 @@ import {
   IsUUID,
 } from 'class-validator';
 
-
 export class CreateJobDto {
+  @IsUUID()
+  categoryId!: string;
 
   @IsUUID()
-categoryId!: string;
+  jobTypeId!: string;
 
   @IsString()
-  title!:string;
-
-
-  @IsString()
-  description!:string;
-
+  title!: string;
 
   @IsString()
-  requirements!:string;
+  description!: string;
 
+  @IsString()
+  requirements!: string;
 
   @IsArray()
-  skills!:string[];
-
-
-  @IsString()
-  location!:string;
-
+  skills!: string[];
 
   @IsString()
-  jobType!:string;
-
+  location!: string;
 
   @IsString()
-  experience!:string;
-
+  experience!: string;
 
   @IsOptional()
-  salary?:string;
-
+  @IsString()
+  salary?: string;
 
   @IsOptional()
-  deadline?:Date;
+  deadline?: Date;
 
-
+  
 }

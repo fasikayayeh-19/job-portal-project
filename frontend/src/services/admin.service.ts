@@ -56,6 +56,39 @@ export interface AdminDashboardData {
     jobs: number;
   }[];
 }
+export interface AdminUser {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  role: "ADMIN" | "COMPANY" | "JOB_SEEKER";
+  status: "ACTIVE" | "BLOCKED" | "PENDING";
+  createdAt: string;
+}
+
+export interface CreateAdminDto {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}
+
+export async function createAdmin(
+  data: CreateAdminDto,
+): Promise<AdminUser> {
+  const response = await api.post<AdminUser>(
+    "/admin/admins",
+    data,
+  );
+
+  return response.data;
+}
+
+export async function deleteAdmin(
+  id: string,
+): Promise<void> {
+  await api.delete(`/admin/users/${id}`);
+}
 
 export async function getAdminJobs(params: {
   page?: number;
