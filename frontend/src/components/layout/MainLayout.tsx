@@ -13,7 +13,9 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => typeof window !== 'undefined' && localStorage.getItem('sidebarCollapsed') === 'true'
+  );
 
   const hideLayout =
     pathname === '/login' ||
@@ -23,21 +25,19 @@ export default function MainLayout({
 
   const isDashboard = pathname.startsWith('/dashboard');
 
-  // Read sidebar collapsed state from localStorage
+  // Listen for sidebar toggle events from DashboardLayout
   useEffect(() => {
     if (!isDashboard) return;
 
     const readState = () => {
-      setSidebarCollapsed(localStorage.getItem('sidebarCollapsed') === 'true');
+      // Defer state update to avoid updating MainLayout while DashboardLayout is rendering
+      requestAnimationFrame(() => {
+        setSidebarCollapsed(localStorage.getItem('sidebarCollapsed') === 'true');
+      });
     };
 
-    // Defer initial read to avoid updating during child render
-    const timer = setTimeout(readState, 0);
-
-    // Listen for changes from DashboardLayout
     window.addEventListener('sidebar-toggle', readState);
     return () => {
-      clearTimeout(timer);
       window.removeEventListener('sidebar-toggle', readState);
     };
   }, [isDashboard]);
@@ -45,9 +45,9 @@ export default function MainLayout({
   return (
     <div className="flex min-h-screen flex-col">
 
-      {/* Navbar — offset by sidebar width on dashboard */}
+      {/* Navbar — fixed at the top, offset by sidebar width on dashboard */}
       {!hideLayout && (
-        <div className={isDashboard ? `transition-[margin] duration-300 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-64'}` : ''}>
+        <div className={`sticky top-0 z-50 shrink-0 ${isDashboard ? `transition-[margin] duration-300 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-64'}` : ''}`}>
           <Navbar />
         </div>
       )}

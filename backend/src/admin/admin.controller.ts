@@ -8,7 +8,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { UserRole } from '../users/enums/user-role.enum';
 import { UserStatus } from '../users/enums/user-status.enum';
 import { Roles } from '../common/decorators/roles.decorator';
-
+import { AdminJobQueryDto, AdminJobStatus } from '../jobs/dto/admin-job-query.dto';
 @Controller('admin')
 export class AdminController {
   constructor(private adminService: AdminService) {}
@@ -28,6 +28,7 @@ getCompanies(
     search,
   );
 }
+
 
 @Patch('companies/:id/suspend')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -53,8 +54,18 @@ activateCompany(@Param('id') id: string) {
   @Get('jobs')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  getJobs() {
-    return this.adminService.getJobs();
+  getJobs(
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+    @Query('search') search?: string,
+    @Query('status') status?: AdminJobStatus,
+  ) {
+    return this.adminService.getJobs(
+      Number(page),
+      Number(limit),
+      search,
+      status,
+    );
   }
   @Get('applications')
   @UseGuards(JwtAuthGuard, RolesGuard)

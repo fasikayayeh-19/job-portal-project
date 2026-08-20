@@ -25,6 +25,8 @@ export interface AuthUser {
 
   company?: {
     companyName: string;
+    logoUrl?: string;
+    profileImageUrl?: string;
   };
 }
 

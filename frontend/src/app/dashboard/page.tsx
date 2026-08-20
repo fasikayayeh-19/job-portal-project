@@ -1,15 +1,11 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import DashboardLayout from '@/components/layout/DashboardLayout';
-
 import JobSeekerDashboard from '@/components/dashboard/JobSeekerDashboard';
 import CompanyDashboard from '@/components/dashboard/CompanyDashboard';
 import AdminDashboard from '@/components/dashboard/AdminDashboard';
-import { url } from 'zod/v4/mini';
 
 type JobSeekerUser = {
   id: string;
@@ -27,6 +23,8 @@ type CompanyUser = {
   lastName?: string;
   company?: {
     companyName: string;
+    logoUrl?: string;
+    profileImageUrl?: string;
   };
 };
 
@@ -47,18 +45,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-   const storedUser = localStorage.getItem('user');
-
-if (storedUser) {
-  const currentUser = JSON.parse(storedUser);
-
-  const updatedUser = {
-    ...currentUser,
-    profileImageUrl: url,
-  };
-
-  localStorage.setItem('user', JSON.stringify(updatedUser));
-}
+    const storedUser = localStorage.getItem('user');
 
     if (!storedUser) {
       router.replace('/login');
@@ -67,7 +54,6 @@ if (storedUser) {
 
     try {
       const parsedUser = JSON.parse(storedUser) as User;
-
       setUser(parsedUser);
     } catch (error) {
       console.error('Invalid user data:', error);
@@ -97,8 +83,7 @@ if (storedUser) {
   }
 
   return (
-    <DashboardLayout user={user}>
-
+    <>
       {/* Job Seeker */}
       {user.role === 'JOB_SEEKER' && (
         <JobSeekerDashboard />
@@ -113,7 +98,6 @@ if (storedUser) {
       {user.role === 'ADMIN' && (
         <AdminDashboard user={user} />
       )}
-
-    </DashboardLayout>
+    </>
   );
 }

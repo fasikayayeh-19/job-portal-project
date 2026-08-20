@@ -1,13 +1,10 @@
 "use client";
-
 import { useState } from "react";
-
-import DashboardToolbar from "@/components/dashboard/DashboardToolbar";
-import { useAdminCompanies,useApproveCompany,useRejectCompany } from "@/hooks/useAdmin";
-
+import {useAdminCompanies,useApproveCompany,useRejectCompany,useSuspendCompany,useDeleteCompany,useActivateCompany,useDeleteAdminCompany, } from "@/hooks/useAdmin";
 type CompanyStatus =
   | "PENDING"
   | "APPROVED"
+  | "SUSPENDED"
   | "REJECTED";
 
 export default function AdminCompaniesPage() {
@@ -16,15 +13,21 @@ export default function AdminCompaniesPage() {
 const [search, setSearch] = useState("");
 const approveCompany = useApproveCompany();
 const rejectCompany = useRejectCompany();
-  const {
-    data,
-    isLoading,
-    isError,
-  } = useAdminCompanies({
-    page,
-    limit: 10,
-    status: status || undefined,
-  });
+const suspendCompany = useSuspendCompany();
+const activateCompany = useActivateCompany();
+const deleteCompany = useDeleteAdminCompany();
+
+const {
+  data,
+  isLoading,
+  isError,
+} = useAdminCompanies({
+  page,
+  limit: 10,
+  
+  status: status || undefined,
+  search: search.trim() || undefined,
+});
 
   const companies = data?.data ?? [];
   const total = data?.total ?? 0;
@@ -32,7 +35,7 @@ const rejectCompany = useRejectCompany();
 const [selectedCompany, setSelectedCompany] =
   useState<any>(null);
 
-  function handleApprove(companyId: string) {
+function handleApprove(companyId: string) {
   if (approveCompany.isPending) return;
 
   approveCompany.mutate(companyId);
@@ -42,6 +45,26 @@ function handleReject(companyId: string) {
   if (rejectCompany.isPending) return;
 
   rejectCompany.mutate(companyId);
+}
+function handleSuspend(companyId: string) {
+  if (suspendCompany.isPending) return;
+  suspendCompany.mutate(companyId);
+}
+function handleActivate(companyId: string) {
+  if (activateCompany.isPending) return;
+  activateCompany.mutate(companyId);
+}
+
+function handleDelete(companyId: string) {
+  if (deleteCompany.isPending) return;
+
+  const confirmed = window.confirm(
+    "Are you sure you want to delete this company? Its jobs and related data may also be deleted.",
+  );
+
+  if (!confirmed) return;
+
+  deleteCompany.mutate(companyId);
 }
   function handleStatusChange(
     value: CompanyStatus | "",
@@ -122,6 +145,9 @@ function handleReject(companyId: string) {
         <option value="REJECTED">
           Rejected
         </option>
+        <option value="SUSPENDED">
+  Suspended
+</option>
       </select>
     </div>
 
@@ -279,36 +305,32 @@ function handleReject(companyId: string) {
 <td className="px-6 py-5">
   <div className="flex justify-end gap-2">
 
-    {/* View */}
     <button
       type="button"
       onClick={() => setSelectedCompany(company)}
-      className="rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-600 transition hover:bg-blue-100 dark:bg-blue-950/30 dark:text-blue-400 dark:hover:bg-blue-950/50"
+      className="rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-600 transition hover:bg-blue-100 dark:bg-blue-950/30 dark:text-blue-400"
     >
       View
     </button>
 
-    {/* Pending actions */}
     {company.status === "PENDING" && (
       <>
-        {/* Approve */}
         <button
           type="button"
           onClick={() => handleApprove(company.id)}
           disabled={approveCompany.isPending}
-          className="rounded-lg bg-green-50 px-3 py-2 text-xs font-semibold text-green-600 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-green-950/30 dark:text-green-400 dark:hover:bg-green-950/50"
+          className="rounded-lg bg-green-50 px-3 py-2 text-xs font-semibold text-green-600 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-green-950/30 dark:text-green-400"
         >
           {approveCompany.isPending
             ? "Approving..."
             : "Approve"}
         </button>
 
-        {/* Reject */}
         <button
           type="button"
           onClick={() => handleReject(company.id)}
           disabled={rejectCompany.isPending}
-          className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-950/50"
+          className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-950/30 dark:text-red-400"
         >
           {rejectCompany.isPending
             ? "Rejecting..."
@@ -317,9 +339,73 @@ function handleReject(companyId: string) {
       </>
     )}
 
+    {company.status === "APPROVED" && (
+      <>
+        <button
+          type="button"
+          onClick={() => handleSuspend(company.id)}
+          disabled={suspendCompany.isPending}
+          className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-600 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-amber-950/30 dark:text-amber-400"
+        >
+          {suspendCompany.isPending
+            ? "Suspending..."
+            : "Suspend"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleDelete(company.id)}
+          disabled={deleteCompany.isPending}
+          className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-950/30 dark:text-red-400"
+        >
+          {deleteCompany.isPending
+            ? "Deleting..."
+            : "Delete"}
+        </button>
+      </>
+    )}
+
+    {company.status === "SUSPENDED" && (
+      <>
+        <button
+          type="button"
+          onClick={() => handleActivate(company.id)}
+          disabled={activateCompany.isPending}
+          className="rounded-lg bg-green-50 px-3 py-2 text-xs font-semibold text-green-600 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-green-950/30 dark:text-green-400"
+        >
+          {activateCompany.isPending
+            ? "Activating..."
+            : "Activate"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleDelete(company.id)}
+          disabled={deleteCompany.isPending}
+          className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-950/30 dark:text-red-400"
+        >
+          {deleteCompany.isPending
+            ? "Deleting..."
+            : "Delete"}
+        </button>
+      </>
+    )}
+
+    {company.status === "REJECTED" && (
+      <button
+        type="button"
+        onClick={() => handleDelete(company.id)}
+        disabled={deleteCompany.isPending}
+        className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-950/30 dark:text-red-400"
+      >
+        {deleteCompany.isPending
+          ? "Deleting..."
+          : "Delete"}
+      </button>
+    )}
+
   </div>
 </td>
-
                     </tr>
                   ))}
 
@@ -568,7 +654,13 @@ function CompanyStatusBadge({
 }: {
   status: CompanyStatus;
 }) {
-  const config = {
+  const config: Record<
+    CompanyStatus,
+    {
+      label: string;
+      className: string;
+    }
+  > = {
     PENDING: {
       label: "Pending",
       className:
@@ -579,6 +671,12 @@ function CompanyStatusBadge({
       label: "Approved",
       className:
         "bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400",
+    },
+
+    SUSPENDED: {
+      label: "Suspended",
+      className:
+        "bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-400",
     },
 
     REJECTED: {

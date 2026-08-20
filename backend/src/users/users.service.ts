@@ -45,6 +45,13 @@ export class UsersService {
     });
   }
 
+  async findByEmailWithCompany(email: string) {
+    return this.usersRepository.findOne({
+      where: { email },
+      relations: {company:true},
+    });
+  }
+
   // =====================================================
   // UPDATE BASIC PROFILE
   // =====================================================

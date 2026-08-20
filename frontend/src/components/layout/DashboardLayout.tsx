@@ -34,8 +34,11 @@ export default function DashboardLayout({
     setCollapsed((prev) => {
       const next = !prev;
       localStorage.setItem('sidebarCollapsed', String(next));
-      window.dispatchEvent(new Event('sidebar-toggle'));
       return next;
+    });
+    // Dispatch after state update to avoid updating MainLayout during DashboardLayout render
+    queueMicrotask(() => {
+      window.dispatchEvent(new Event('sidebar-toggle'));
     });
   };
 

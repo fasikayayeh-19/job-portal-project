@@ -1,6 +1,5 @@
 
 import api from "@/lib/axios";
-
 export interface AdminUser {
   id: string;
   firstName?: string;
@@ -10,6 +9,11 @@ export interface AdminUser {
   status: "ACTIVE" | "BLOCKED" | "PENDING";
   createdAt: string;
 }
+
+
+
+
+
 
 export interface AdminUsersResponse {
   data: AdminUser[];
@@ -51,6 +55,22 @@ export interface AdminDashboardData {
     category: string;
     jobs: number;
   }[];
+}
+
+export async function getAdminJobs(params: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: "PENDING" | "APPROVED" | "PUBLISHED" | "CLOSED";
+}): Promise<AdminJobsResponse> {
+  const response = await api.get<AdminJobsResponse>(
+    "/admin/jobs",
+    {
+      params,
+    }
+  );
+
+  return response.data;
 }
 
 export async function getAdminDashboardStats(): Promise<AdminDashboardData> {
@@ -95,7 +115,7 @@ export interface AdminCompany {
   website?: string | null;
   phone?: string | null;
   description?: string | null;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: "PENDING" | "APPROVED" | "REJECTED" |"SUSPENDED";
   createdAt: string;
   user?: {
     id: string;
@@ -119,7 +139,12 @@ export interface AdminCompaniesResponse {
 export async function getAdminCompanies(params: {
   page?: number;
   limit?: number;
-  status?: "PENDING" | "APPROVED" | "REJECTED";
+  search?: string;
+  status?:
+    | "PENDING"
+    | "APPROVED"
+    | "SUSPENDED"
+    | "REJECTED";
 }): Promise<AdminCompaniesResponse> {
   const response = await api.get("/admin/companies", {
     params,
@@ -158,3 +183,86 @@ export async function activateCompany(companyId: string) {
 
   return response.data;
 }
+export async function deleteCompany(companyId: string) {
+  const response = await api.delete(
+    `/admin/companies/${companyId}`,
+  );
+
+  return response.data;
+}
+export async function deleteAdminCompany(companyId: string) {
+  const response = await api.delete(
+    `/admin/companies/${companyId}`,
+  );
+
+  return response.data;
+}
+
+export type AdminJobStatus = "PUBLISHED" | "CLOSED";
+
+export interface AdminJob {
+  id: string;
+  title: string;
+  description: string;
+  requirements?: string | null;
+  location: string;
+  jobType: string;
+  experience: string;
+  salary?: string | null;
+  status: AdminJobStatus;
+  deadline?: string | null;
+  createdAt: string;
+
+  company?: {
+    id: string;
+    companyName: string;
+  };
+
+  category?: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface AdminJobsResponse {
+  data: AdminJob[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+
+
+export async function approveJob(jobId: string) {
+  const response = await api.patch(
+    `/admin/jobs/${jobId}/approve`,
+  );
+
+  return response.data;
+}
+
+export async function rejectJob(jobId: string) {
+  const response = await api.patch(
+    `/admin/jobs/${jobId}/reject`,
+  );
+
+  return response.data;
+}
+
+export async function closeJob(jobId: string) {
+  const response = await api.patch(
+    `/admin/jobs/${jobId}/close`,
+  );
+
+  return response.data;
+}
+
+export async function deleteAdminJob(jobId: string) {
+  const response = await api.delete(
+    `/admin/jobs/${jobId}`,
+  );
+
+  return response.data;
+}
+

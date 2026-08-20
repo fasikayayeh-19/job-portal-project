@@ -8,7 +8,7 @@ import {
   
   
 } from 'typeorm';
-
+import { AdminJobQueryDto } from '../jobs/dto/admin-job-query.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MailService } from '../mail/mail.service';
 import { UserRole } from '../users/enums/user-role.enum';
@@ -41,7 +41,76 @@ constructor(
   private readonly mailService: MailService,
 ) {}
 
+async adminFindAll(query: AdminJobQueryDto) {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
 
+  const qb = this.jobRepository
+    .createQueryBuilder('job')
+    .leftJoinAndSelect('job.company', 'company')
+    .leftJoinAndSelect('job.category', 'category');
+
+  // ADMIN CAN ONLY SEE PUBLISHED AND CLOSED JOBS
+  qb.andWhere(
+    'job.status IN (:...statuses)',
+    {
+      statuses: [
+        'PUBLISHED',
+        'CLOSED',
+      ],
+    },
+  );
+
+  // SEARCH
+  if (query.search) {
+    qb.andWhere(
+      `(
+        LOWER(job.title) LIKE LOWER(:search)
+        OR LOWER(job.description) LIKE LOWER(:search)
+        OR LOWER(company.companyName) LIKE LOWER(:search)
+      )`,
+      {
+        search: `%${query.search}%`,
+      },
+    );
+  }
+
+  // STATUS FILTER
+  if (query.status) {
+    qb.andWhere(
+      'job.status = :status',
+      {
+        status: query.status,
+      },
+    );
+  }
+
+  // NEWEST FIRST
+  qb.orderBy(
+    'job.createdAt',
+    'DESC',
+  );
+
+  // PAGINATION
+  qb.skip(
+    (page - 1) * limit,
+  );
+
+  qb.take(limit);
+
+  const [jobs, total] =
+    await qb.getManyAndCount();
+
+  return {
+    data: jobs,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(
+      total / limit,
+    ),
+  };
+}
 
 
 async getUsers(
@@ -204,17 +273,39 @@ async unblockUser(id: string) {
     },
   });
 }
-  async getJobs() {
-  return this.jobRepository.find({
-    relations: {
-      company: true,
-      category: true,
-    },
-    order: {
-      createdAt: 'DESC',
-    },
-  });
-}
+  async getJobs(page = 1, limit = 10, search?: string, status?: string) {
+    const skip = (page - 1) * limit;
+
+    const qb = this.jobRepository
+      .createQueryBuilder('job')
+      .leftJoinAndSelect('job.company', 'company')
+      .leftJoinAndSelect('job.category', 'category')
+      .orderBy('job.createdAt', 'DESC');
+
+    if (search) {
+      qb.andWhere(
+        '(job.title ILIKE :search OR company.companyName ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    if (status) {
+      qb.andWhere('job.status = :status', { status });
+    }
+
+    const [data, total] = await qb
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
 
 async getDashboardStats() {
   const [

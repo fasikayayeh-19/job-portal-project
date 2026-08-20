@@ -22,6 +22,20 @@ export class AuthService {
     private readonly companiesService: CompaniesService,
   ) {}
   private formatUser(user: any, company?: any) {
+  const companyData = company
+    ? {
+        companyName: company.companyName,
+        logoUrl: company.logoUrl,
+        profileImageUrl: company.profileImageUrl,
+      }
+    : user.company
+      ? {
+          companyName: user.company.companyName,
+          logoUrl: user.company.logoUrl,
+          profileImageUrl: user.company.profileImageUrl,
+        }
+      : undefined;
+
   return {
     id: user.id,
     email: user.email,
@@ -40,15 +54,7 @@ export class AuthService {
     resumeUrl: user.resumeUrl,
     resumeFileName: user.resumeFileName,
 
-    company: company
-      ? {
-          companyName: company.companyName,
-        }
-      : user.company
-        ? {
-            companyName: user.company.companyName,
-          }
-        : undefined,
+    company: companyData,
   };
 }
 
@@ -130,7 +136,7 @@ export class AuthService {
   // =========================
 
  async login(dto: LoginDto) {
-  const user = await this.usersService.findByEmail(
+  const user = await this.usersService.findByEmailWithCompany(
     dto.email,
   );
 
@@ -140,22 +146,18 @@ export class AuthService {
     );
   }
 
-  console.log('LOGIN USER ID:', user.id);
-  console.log('LOGIN PASSWORD HASH:', user.password);
-
   const isPasswordValid = await bcrypt.compare(
     dto.password,
     user.password,
   );
-
-  console.log('PASSWORD VALID:', isPasswordValid);
 
   if (!isPasswordValid) {
     throw new UnauthorizedException(
       'Invalid email or password',
     );
   }
-   // Check account status
+
+  // Check account status
   if (user.status === UserStatus.BLOCKED) {
     throw new UnauthorizedException(
       'Your account has been blocked',
@@ -174,13 +176,7 @@ export class AuthService {
   return {
     message: 'Login successful',
     accessToken,
-    user: {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      firstName: user.firstName,
-      lastName: user.lastName,
-    },
+    user: this.formatUser(user),
   };
 }
 }

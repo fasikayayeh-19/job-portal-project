@@ -23,5 +23,7 @@ export interface User {
 
   company?: {
     companyName: string;
+    logoUrl?: string;
+    profileImageUrl?: string;
   };
 }

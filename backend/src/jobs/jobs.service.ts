@@ -11,7 +11,7 @@ import { Repository } from 'typeorm';
 import { Job, JobStatus } from './entities/job.entity';
 
 import { Company } from '../companies/entities/company.entity';
-
+import { AdminJobQueryDto } from './dto/admin-job-query.dto';
 import { CreateJobDto } from './dto/create-job.dto';
 import { Category } from '../categories/entities/category.entity';
 import { CompanyStatus } from '../companies/enums/company-status.enum';
@@ -70,8 +70,11 @@ export class JobsService {
 
     return this.jobRepository.save(job);
   }
+// =====================================================
+// PUBLIC - ALL APPROVED COMPANY JOBS
+// =====================================================
 
-  async findAll(query: JobQueryDto) {
+async findAll(query: JobQueryDto) {
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
 
@@ -80,52 +83,171 @@ export class JobsService {
     .leftJoinAndSelect('job.company', 'company')
     .leftJoinAndSelect('job.category', 'category');
 
-  // Only show jobs from approved companies
-  qb.andWhere('company.status = :companyStatus', {
-    companyStatus: CompanyStatus.APPROVED,
-  });
+  // ===================================================
+  // ONLY JOBS FROM APPROVED COMPANIES
+  // ===================================================
 
-  // Don't show closed jobs
-  qb.andWhere('job.status != :jobStatus', {
-    jobStatus: JobStatus.CLOSED,
-  });
+  qb.andWhere(
+    'company.status = :companyStatus',
+    {
+      companyStatus: CompanyStatus.APPROVED,
+    },
+  );
+
+  // ===================================================
+  // DO NOT SHOW CLOSED JOBS
+  // ===================================================
+
+  qb.andWhere(
+    'job.status != :jobStatus',
+    {
+      jobStatus: JobStatus.CLOSED,
+    },
+  );
+
+  // ===================================================
+  // SEARCH
+  // ===================================================
 
   if (query.search) {
-    qb.andWhere('LOWER(job.title) LIKE LOWER(:search)', {
-      search: `%${query.search}%`,
-    });
+    qb.andWhere(
+      `(
+        LOWER(job.title) LIKE LOWER(:search)
+        OR LOWER(job.description) LIKE LOWER(:search)
+        OR LOWER(job.location) LIKE LOWER(:search)
+      )`,
+      {
+        search: `%${query.search}%`,
+      },
+    );
   }
+
+  // ===================================================
+  // LOCATION
+  // ===================================================
 
   if (query.location) {
-    qb.andWhere('LOWER(job.location) LIKE LOWER(:location)', {
-      location: `%${query.location}%`,
-    });
+    qb.andWhere(
+      'LOWER(job.location) LIKE LOWER(:location)',
+      {
+        location: `%${query.location}%`,
+      },
+    );
   }
+
+  // ===================================================
+  // CATEGORY
+  // ===================================================
+
+  if (query.categoryId) {
+    qb.andWhere(
+      'category.id = :categoryId',
+      {
+        categoryId: query.categoryId,
+      },
+    );
+  }
+
+  // ===================================================
+  // JOB TYPE
+  // ===================================================
 
   if (query.jobType) {
-    qb.andWhere('job.jobType = :jobType', {
-      jobType: query.jobType,
-    });
+    qb.andWhere(
+      'job.jobType = :jobType',
+      {
+        jobType: query.jobType,
+      },
+    );
   }
 
-  qb.orderBy('job.createdAt', 'DESC');
+  // ===================================================
+  // POSTED WITHIN
+  // ===================================================
 
-  qb.skip((page - 1) * limit);
+  if (query.postedWithin) {
+    const now = new Date();
+
+    let fromDate: Date | null = null;
+
+    if (query.postedWithin === 'today') {
+      fromDate = new Date(now);
+      fromDate.setHours(0, 0, 0, 0);
+    }
+
+    if (query.postedWithin === 'yesterday') {
+      fromDate = new Date(now);
+      fromDate.setDate(
+        fromDate.getDate() - 1,
+      );
+      fromDate.setHours(0, 0, 0, 0);
+    }
+
+    if (query.postedWithin === 'week') {
+      fromDate = new Date(now);
+      fromDate.setDate(
+        fromDate.getDate() - 7,
+      );
+    }
+
+    if (query.postedWithin === 'month') {
+      fromDate = new Date(now);
+      fromDate.setMonth(
+        fromDate.getMonth() - 1,
+      );
+    }
+
+    if (fromDate) {
+      qb.andWhere(
+        'job.createdAt >= :fromDate',
+        {
+          fromDate,
+        },
+      );
+    }
+  }
+
+  // ===================================================
+  // ORDER
+  // ===================================================
+
+  qb.orderBy(
+    'job.createdAt',
+    'DESC',
+  );
+
+  // ===================================================
+  // PAGINATION
+  // ===================================================
+
+  qb.skip(
+    (page - 1) * limit,
+  );
+
   qb.take(limit);
 
-  const [jobs, total] = await qb.getManyAndCount();
+  const [jobs, total] =
+    await qb.getManyAndCount();
 
   return {
     data: jobs,
     total,
     page,
     limit,
-    totalPages: Math.ceil(total / limit),
+    totalPages: Math.ceil(
+      total / limit,
+    ),
   };
 }
 
-  async findOne(id: string) {
-    const job = await this.jobRepository.findOne({
+
+// =====================================================
+// PUBLIC - JOB DETAIL
+// =====================================================
+
+async findOne(id: string) {
+  const job =
+    await this.jobRepository.findOne({
       where: {
         id,
       },
@@ -136,12 +258,41 @@ export class JobsService {
       },
     });
 
-    if (!job) {
-      throw new NotFoundException('Job not found');
-    }
-
-    return job;
+  if (!job) {
+    throw new NotFoundException(
+      'Job not found',
+    );
   }
+
+  // ===================================================
+  // DO NOT ALLOW SEEKERS TO SEE JOBS FROM
+  // UNAPPROVED COMPANIES
+  // ===================================================
+
+  if (
+    job.company.status !==
+    CompanyStatus.APPROVED
+  ) {
+    throw new NotFoundException(
+      'Job not found',
+    );
+  }
+
+  // ===================================================
+  // DO NOT SHOW CLOSED JOBS
+  // ===================================================
+
+  if (
+    job.status === JobStatus.CLOSED
+  ) {
+    throw new NotFoundException(
+      'Job not found',
+    );
+  }
+
+  return job;
+}
+
 
   async myJobs(user: any) {
   const company = await this.companyRepository.findOne({
@@ -223,6 +374,61 @@ export class JobsService {
   Object.assign(job, jobData);
 
   return this.jobRepository.save(job);
+}
+
+async getJobs(query: AdminJobQueryDto) {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+
+  const qb = this.jobRepository
+    .createQueryBuilder('job')
+    .leftJoinAndSelect('job.company', 'company')
+    .leftJoinAndSelect('job.category', 'category');
+
+  // ADMIN JOB PAGE:
+  // Only show published and closed jobs
+  qb.andWhere('job.status IN (:...statuses)', {
+    statuses: [
+      JobStatus.PUBLISHED,
+      JobStatus.CLOSED,
+    ],
+  });
+
+  // Search
+  if (query.search) {
+    qb.andWhere(
+      `(
+        LOWER(job.title) LIKE LOWER(:search)
+        OR LOWER(company.companyName) LIKE LOWER(:search)
+        OR LOWER(job.location) LIKE LOWER(:search)
+      )`,
+      {
+        search: `%${query.search}%`,
+      },
+    );
+  }
+
+  // Status filter
+  if (query.status) {
+    qb.andWhere('job.status = :status', {
+      status: query.status,
+    });
+  }
+
+  qb.orderBy('job.createdAt', 'DESC');
+
+  qb.skip((page - 1) * limit);
+  qb.take(limit);
+
+  const [jobs, total] = await qb.getManyAndCount();
+
+  return {
+    data: jobs,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
 }
 async remove(
  id:string,

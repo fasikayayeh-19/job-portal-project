@@ -394,7 +394,7 @@ useEffect(() => {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#020817]">
+    <header className="w-full border-b border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#020817]">
       <nav className="mx-auto flex h-30 items-center justify-between px-5 sm:px-6 lg:px-10">
         {/* ================================================= */}
         {/* LOGO */}

@@ -49,6 +49,8 @@ interface SidebarUser {
 
   company?: {
     companyName: string;
+    logoUrl?: string;
+    profileImageUrl?: string;
   };
 }
 
@@ -209,7 +211,7 @@ const jobSeekerItems: MenuItem[] = [
     },
     {
       label: 'Jobs',
-      href: '/dashboard/jobs',
+      href: '/dashboard/jobs-admin',
       icon: <BriefcaseBusiness size={19} />,
     },
     {
@@ -334,21 +336,21 @@ const jobSeekerItems: MenuItem[] = [
             HEADER
         ==================================================== */}
 
-        <div className="flex h-16 shrink-0 items-center border-b border-white/15 px-3">
-          <Link
-            href="/dashboard"
-            onClick={onClose}
-            className="flex min-w-0 items-center gap-2 text-xl font-bold tracking-tight text-white transition-opacity hover:opacity-90"
-          >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/20 text-sm font-bold">
-              JP
-            </div>
-            {!collapsed && (
+        <div className={`flex h-16 shrink-0 items-center border-b border-white/15 ${collapsed ? 'justify-center px-1' : 'px-3'}`}>
+          {!collapsed && (
+            <Link
+              href="/dashboard"
+              onClick={onClose}
+              className="flex min-w-0 items-center gap-2 text-xl font-bold tracking-tight text-white transition-opacity hover:opacity-90"
+            >
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/20 text-sm font-bold">
+                JP
+              </div>
               <span className="truncate">Job Portal</span>
-            )}
-          </Link>
+            </Link>
+          )}
 
-          <div className="ml-auto flex items-center gap-1">
+          <div className={`${collapsed ? '' : 'ml-auto'} flex items-center gap-1`}>
             {/* Collapse toggle — desktop only */}
             <button
               type="button"
@@ -379,17 +381,23 @@ const jobSeekerItems: MenuItem[] = [
           <div className="flex items-center gap-3">
             {/* Avatar */}
             <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20 text-white ring-2 ring-white/20">
-              {currentUser.profileImageUrl ? (
-                <img
-                  src={`http://localhost:3000${currentUser.profileImageUrl}`}
-                  alt={`${displayName} profile`}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="text-sm font-bold">
-                  {displayName.charAt(0).toUpperCase()}
-                </span>
-              )}
+              {(() => {
+                const avatarUrl = currentUser.role === 'COMPANY'
+                  ? (currentUser.company?.logoUrl || currentUser.company?.profileImageUrl || currentUser.profileImageUrl)
+                  : currentUser.profileImageUrl;
+
+                return avatarUrl ? (
+                  <img
+                    src={avatarUrl.startsWith('http') ? avatarUrl : `http://localhost:3000${avatarUrl}`}
+                    alt={`${displayName} profile`}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-sm font-bold">
+                    {displayName.charAt(0).toUpperCase()}
+                  </span>
+                );
+              })()}
             </div>
 
             {/* Name + role */}
