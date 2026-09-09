@@ -18,7 +18,7 @@ import { MailService } from '../mail/mail.service';
 import { UserRole } from '../users/enums/user-role.enum';
 import { UserStatus } from '../users/enums/user-status.enum';
 import { Company } from '../companies/entities/company.entity';
-import { Job } from '../jobs/entities/job.entity';
+import { Job, JobStatus } from '../jobs/entities/job.entity';
 import { Application } from '../applications/entities/application.entity';
 import { CompanyStatus } from '../companies/enums/company-status.enum';
 import { User } from '../users/entities/user.entity';
@@ -658,6 +658,46 @@ async activateCompany(id: string) {
   };
 }
 
+
+async publishJob(id: string) {
+  const job = await this.jobRepository.findOne({
+    where: {
+      id,
+    },
+    relations: {
+      company: true,
+      category: true,
+      jobType: true,
+    },
+  });
+
+  if (!job) {
+    throw new NotFoundException('Job not found');
+  }
+
+  if (job.status === JobStatus.PUBLISHED) {
+    return {
+      message: 'Job is already published',
+      job,
+    };
+  }
+
+  if (job.status === JobStatus.CLOSED) {
+    throw new BadRequestException(
+      'Closed jobs cannot be published',
+    );
+  }
+
+  job.status = JobStatus.PUBLISHED;
+
+  const publishedJob =
+    await this.jobRepository.save(job);
+
+  return {
+    message: 'Job published successfully',
+    job: publishedJob,
+  };
+}
   async rejectCompany(id: string) {
   const company = await this.companyRepository.findOne({
     where: { id },

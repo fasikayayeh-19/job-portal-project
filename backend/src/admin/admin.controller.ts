@@ -67,6 +67,12 @@ activateCompany(@Param('id') id: string) {
       status,
     );
   }
+  @Patch('jobs/:id/publish')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
+publishJob(@Param('id') id: string) {
+  return this.adminService.publishJob(id);
+}
   @Get('applications')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')

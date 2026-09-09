@@ -68,20 +68,22 @@ constructor(
     throw new ForbiddenException('Company is not approved');
   }
 
-  const job = this.jobRepository.create({
-    title: dto.title,
-    description: dto.description,
-    requirements: dto.requirements,
-    skills: dto.skills,
-    location: dto.location,
-    experience: dto.experience,
-    salary: dto.salary,
-    deadline: dto.deadline,
+const job = this.jobRepository.create({
+  title: dto.title,
+  description: dto.description,
+  requirements: dto.requirements,
+  skills: dto.skills,
+  location: dto.location,
+  experience: dto.experience,
+  salary: dto.salary,
+  deadline: dto.deadline,
 
-    category,
-    jobType,
-    company,
-  });
+  category,
+  jobType,
+  company,
+
+  status: JobStatus.PUBLISHED,
+});
 
   return this.jobRepository.save(job);
 }

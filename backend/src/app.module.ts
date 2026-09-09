@@ -16,6 +16,8 @@ import { SavedJobsModule } from './saved-jobs/saved-jobs.module';
 import { JobSeekerModule } from './job-seeker/job-seeker.module';
 import { CompanyDashboardModule } from './company-dashboard/company-dashboard.module';
 import { JobTypesModule } from './job-types/job-types-module';
+import { HomeModule } from './home/home.module';
+import { ContactModule } from './contact/contact.module';
 
 @Module({
   imports: [
@@ -51,7 +53,7 @@ import { JobTypesModule } from './job-types/job-types-module';
 
         autoLoadEntities: true,
 
-        synchronize: true,
+        synchronize: false, // Set to false in production for safety
       }),
     }),
 
@@ -73,6 +75,7 @@ import { JobTypesModule } from './job-types/job-types-module';
     // Application modules
     // =====================================================
 
+   ContactModule,
     UsersModule,
 
     AuthModule,
@@ -95,6 +98,7 @@ import { JobTypesModule } from './job-types/job-types-module';
 
     CompanyDashboardModule,
     JobTypesModule,
+    HomeModule,
   ],
 
   providers: [

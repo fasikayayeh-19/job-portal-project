@@ -3,8 +3,10 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Patch,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -151,7 +153,25 @@ async uploadLogo(
   );
 }
 
+@Get(':id')
+async findPublicCompanyById(
+  @Param('id') id: string,
+) {
+  return this.companiesService.findPublicCompanyById(id);
+}
 
+@Get()
+async findPublicCompanies(
+  @Query('page') page?: string,
+  @Query('limit') limit?: string,
+  @Query('search') search?: string,
+) {
+  return this.companiesService.findPublicCompanies(
+    Number(page) || 1,
+    Number(limit) || 12,
+    search,
+  );
+}
 
   
 }

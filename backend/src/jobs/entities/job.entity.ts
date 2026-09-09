@@ -18,9 +18,6 @@ import { Application } from '../../applications/entities/application.entity';
 
 export enum JobStatus {
 
-  PENDING = 'PENDING',
-
-  APPROVED = 'APPROVED',
 
   PUBLISHED = 'PUBLISHED',
 
@@ -91,7 +88,7 @@ jobType!: JobType;
   @Column({
     type:'enum',
     enum:JobStatus,
-    default:JobStatus.PENDING
+    default:JobStatus.PUBLISHED
   })
   status!:JobStatus;
 

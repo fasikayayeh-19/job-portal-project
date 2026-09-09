@@ -3,7 +3,13 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import {
+  MessageSquare,
+} from 'lucide-react';
 
+import {
+  useContactUnreadCount,
+} from '@/hooks/useContact';
 import { getCurrentUser } from '@/lib/auth';
 
 import {
@@ -89,6 +95,9 @@ export default function Sidebar({
 const [openManagement, setOpenManagement] = useState(false);
   const [currentUser, setCurrentUser] =
     useState<SidebarUser>(user);
+    const {
+  data: unreadMessages = 0,
+} = useContactUnreadCount();
 
   useEffect(() => {
     // Get latest user from localStorage
@@ -228,6 +237,12 @@ const jobSeekerItems: MenuItem[] = [
     href: "/dashboard/analytics",
     icon: <BarChart3 size={19} />,
   },
+  {
+  label: 'Messages',
+  href: '/dashboard/admin/messages',
+  icon: MessageSquare,
+  badge: unreadMessages,
+},
   {
     label: "Management",
     href: "/dashboard/management",

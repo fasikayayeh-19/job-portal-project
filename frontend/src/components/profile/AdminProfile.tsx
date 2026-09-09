@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { UserCircle, Mail, Phone, MapPin, Save, Loader2,ca } from 'lucide-react';
+import { UserCircle, Mail, Phone, MapPin, Save, Loader2,Camera } from 'lucide-react';
 
 interface AdminUser {
   id: string;
@@ -72,10 +72,10 @@ export default function AdminProfile() {
 
     const formData = new FormData();
 
-    formData.append('image', file);
+    formData.append('file', file);
 
     const response = await fetch(
-      'http://localhost:3000/users/profile/image',
+      'http://localhost:3000/users/profile-image',
       {
         method: 'POST',
         headers: {
@@ -186,7 +186,7 @@ export default function AdminProfile() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
+      <div className="flex min-h-100 items-center justify-center">
         <Loader2
           className="animate-spin text-[#1671B9]"
           size={28}
